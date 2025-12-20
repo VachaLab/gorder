@@ -5,6 +5,7 @@ import builtins
 import typing
 from math import inf
 
+@typing.final
 class Cuboid:
     r"""
     Calculate order parameters inside a cuboid.
@@ -25,8 +26,9 @@ class Cuboid:
     ConfigError
         If any dimension is invalid.
     """
-    def __new__(cls, xdim:typing.Sequence[builtins.float]=[-inf, inf], ydim:typing.Sequence[builtins.float]=[-inf, inf], zdim:typing.Sequence[builtins.float]=[-inf, inf], reference:typing.Union[typing.Sequence[builtins.float], builtins.str, None]=None) -> Cuboid: ...
+    def __new__(cls, xdim: typing.Sequence[builtins.float] = [-inf, inf], ydim: typing.Sequence[builtins.float] = [-inf, inf], zdim: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Cuboid: ...
 
+@typing.final
 class Cylinder:
     r"""
     Calculate order parameters inside a cylinder.
@@ -47,8 +49,9 @@ class Cylinder:
     ConfigError
         If `radius` is not positive, `span` is invalid, or `orientation` is not recognized.
     """
-    def __new__(cls, radius:builtins.float, orientation:builtins.str, span:typing.Sequence[builtins.float]=[-inf, inf], reference:typing.Union[typing.Sequence[builtins.float], builtins.str, None]=None) -> Cylinder: ...
+    def __new__(cls, radius: builtins.float, orientation: builtins.str, span: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Cylinder: ...
 
+@typing.final
 class Sphere:
     r"""
     Calculate order parameters inside a sphere.
@@ -65,5 +68,5 @@ class Sphere:
     ConfigError
         If `radius` is not positive.
     """
-    def __new__(cls, radius:builtins.float, reference:typing.Union[typing.Sequence[builtins.float], builtins.str, None]=None) -> Sphere: ...
+    def __new__(cls, radius: builtins.float, reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Sphere: ...
 

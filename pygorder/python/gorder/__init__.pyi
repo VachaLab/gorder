@@ -16,6 +16,7 @@ from . import exceptions
 
 __version__: str
 
+@typing.final
 class Analysis:
     r"""
     Class describing all the parameters of the analysis.
@@ -55,7 +56,7 @@ class Analysis:
         Minimum number of samples required for each heavy atom or bond type to compute its order parameter. Defaults to 1.
     n_threads : Optional[int], default=None
         Number of threads to use for analysis. Defaults to 1.
-    leaflets : Optional[Union[GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, ManualClassification, NdxClassification]], default=None
+    leaflets : Optional[Union[GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, SphericalClusteringClassification, ManualClassification, NdxClassification]], default=None
         Defines how lipids are assigned to membrane leaflets. If provided, order parameters are calculated per leaflet.
     ordermap : Optional[OrderMap], default=None
         Specifies parameters for ordermap calculations. If not provided, ordermaps are not generated.
@@ -70,7 +71,7 @@ class Analysis:
     overwrite : Optional[bool], default=False
         If True, overwrites existing output files and directories without backups.
     """
-    def __new__(cls, structure:builtins.str, trajectory:typing.Union[builtins.str, typing.Sequence[str]], analysis_type:typing.Union[gorder.analysis_types.AAOrder, gorder.analysis_types.CGOrder, gorder.analysis_types.UAOrder], bonds:typing.Optional[builtins.str]=None, index:typing.Optional[builtins.str]=None, output_yaml:typing.Optional[builtins.str]=None, output_tab:typing.Optional[builtins.str]=None, output_xvg:typing.Optional[builtins.str]=None, output_csv:typing.Optional[builtins.str]=None, membrane_normal:typing.Optional[typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.float32]], gorder.membrane_normal.DynamicNormal]]=None, begin:typing.Optional[builtins.float]=None, end:typing.Optional[builtins.float]=None, step:typing.Optional[builtins.int]=None, min_samples:typing.Optional[builtins.int]=None, n_threads:typing.Optional[builtins.int]=None, leaflets:typing.Optional[typing.Union[gorder.leaflets.GlobalClassification, gorder.leaflets.LocalClassification, gorder.leaflets.IndividualClassification, gorder.leaflets.ClusteringClassification, gorder.leaflets.ManualClassification, gorder.leaflets.NdxClassification]]=None, ordermap:typing.Optional[gorder.ordermap.OrderMap]=None, estimate_error:typing.Optional[gorder.estimate_error.EstimateError]=None, geometry:typing.Optional[typing.Union[gorder.geometry.Cuboid, gorder.geometry.Cylinder, gorder.geometry.Sphere]]=None, handle_pbc:typing.Optional[builtins.bool]=None, silent:typing.Optional[builtins.bool]=None, overwrite:typing.Optional[builtins.bool]=None) -> Analysis: ...
+    def __new__(cls, structure: builtins.str, trajectory: typing.Union[builtins.str, typing.Sequence[str]], analysis_type: typing.Union[gorder.analysis_types.AAOrder, gorder.analysis_types.CGOrder, gorder.analysis_types.UAOrder], bonds: typing.Optional[builtins.str] = None, index: typing.Optional[builtins.str] = None, output_yaml: typing.Optional[builtins.str] = None, output_tab: typing.Optional[builtins.str] = None, output_xvg: typing.Optional[builtins.str] = None, output_csv: typing.Optional[builtins.str] = None, membrane_normal: typing.Optional[typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.float32]], gorder.membrane_normal.DynamicNormal]] = None, begin: typing.Optional[builtins.float] = None, end: typing.Optional[builtins.float] = None, step: typing.Optional[builtins.int] = None, min_samples: typing.Optional[builtins.int] = None, n_threads: typing.Optional[builtins.int] = None, leaflets: typing.Optional[typing.Union[gorder.leaflets.GlobalClassification, gorder.leaflets.LocalClassification, gorder.leaflets.IndividualClassification, gorder.leaflets.ClusteringClassification, gorder.leaflets.SphericalClusteringClassification, gorder.leaflets.ManualClassification, gorder.leaflets.NdxClassification]] = None, ordermap: typing.Optional[gorder.ordermap.OrderMap] = None, estimate_error: typing.Optional[gorder.estimate_error.EstimateError] = None, geometry: typing.Optional[typing.Union[gorder.geometry.Cuboid, gorder.geometry.Cylinder, gorder.geometry.Sphere]] = None, handle_pbc: typing.Optional[builtins.bool] = None, silent: typing.Optional[builtins.bool] = None, overwrite: typing.Optional[builtins.bool] = None) -> Analysis: ...
     def run(self) -> gorder.results.AnalysisResults:
         r"""
         Run the analysis.
@@ -88,7 +89,7 @@ class Analysis:
             If the analysis fails.
         """
     @staticmethod
-    def from_file(file:builtins.str) -> Analysis:
+    def from_file(file: builtins.str) -> Analysis:
         r"""
         Read analysis options from a YAML configuration file.
         
@@ -108,6 +109,7 @@ class Analysis:
             If the file cannot be read or parsed.
         """
 
+@typing.final
 class AtomType:
     r"""
     Represents an atom type within a molecule type.
@@ -143,6 +145,7 @@ class AtomType:
             Name of the residue containing this atom.
         """
 
+@typing.final
 class Frequency:
     r"""
     Represents how often an action is performed.
@@ -160,7 +163,7 @@ class Frequency:
             A frequency object representing a single execution.
         """
     @staticmethod
-    def every(n_frames:builtins.int) -> Frequency:
+    def every(n_frames: builtins.int) -> Frequency:
         r"""
         Perform the action every N frames.
         

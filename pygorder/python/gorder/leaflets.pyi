@@ -6,6 +6,7 @@ import numpy
 import typing
 import gorder
 
+@typing.final
 class ClusteringClassification:
     r"""
     Assign lipids into leaflets using spectral clustering.
@@ -28,8 +29,9 @@ class ClusteringClassification:
     flip : bool, default=False
         Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
     """
-    def __new__(cls, heads:builtins.str, frequency:typing.Optional[gorder.Frequency]=None, collect:typing.Optional[typing.Union[builtins.bool, builtins.str]]=None, flip:builtins.bool=False) -> ClusteringClassification: ...
+    def __new__(cls, heads: builtins.str, frequency: typing.Optional[gorder.Frequency] = None, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None, flip: builtins.bool = False) -> ClusteringClassification: ...
 
+@typing.final
 class GlobalClassification:
     r"""
     Assign lipids into leaflets based on the global membrane center of geometry.
@@ -57,8 +59,9 @@ class GlobalClassification:
     flip : bool, default=False
         Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
     """
-    def __new__(cls, membrane:builtins.str, heads:builtins.str, frequency:typing.Optional[gorder.Frequency]=None, membrane_normal:typing.Optional[builtins.str]=None, collect:typing.Optional[typing.Union[builtins.bool, builtins.str]]=None, flip:builtins.bool=False) -> GlobalClassification: ...
+    def __new__(cls, membrane: builtins.str, heads: builtins.str, frequency: typing.Optional[gorder.Frequency] = None, membrane_normal: typing.Optional[builtins.str] = None, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None, flip: builtins.bool = False) -> GlobalClassification: ...
 
+@typing.final
 class IndividualClassification:
     r"""
     Assign lipids into leaflets based on the orientation of acyl chains.
@@ -87,8 +90,9 @@ class IndividualClassification:
     flip : bool, default=False
         Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
     """
-    def __new__(cls, heads:builtins.str, methyls:builtins.str, frequency:typing.Optional[gorder.Frequency]=None, membrane_normal:typing.Optional[builtins.str]=None, collect:typing.Optional[typing.Union[builtins.bool, builtins.str]]=None, flip:builtins.bool=False) -> IndividualClassification: ...
+    def __new__(cls, heads: builtins.str, methyls: builtins.str, frequency: typing.Optional[gorder.Frequency] = None, membrane_normal: typing.Optional[builtins.str] = None, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None, flip: builtins.bool = False) -> IndividualClassification: ...
 
+@typing.final
 class LocalClassification:
     r"""
     Assign lipids into leaflets based on the local membrane center of geometry.
@@ -119,8 +123,9 @@ class LocalClassification:
     flip : bool, default=False
         Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
     """
-    def __new__(cls, membrane:builtins.str, heads:builtins.str, radius:builtins.float, frequency:typing.Optional[gorder.Frequency]=None, membrane_normal:typing.Optional[builtins.str]=None, collect:typing.Optional[typing.Union[builtins.bool, builtins.str]]=None, flip:builtins.bool=False) -> LocalClassification: ...
+    def __new__(cls, membrane: builtins.str, heads: builtins.str, radius: builtins.float, frequency: typing.Optional[gorder.Frequency] = None, membrane_normal: typing.Optional[builtins.str] = None, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None, flip: builtins.bool = False) -> LocalClassification: ...
 
+@typing.final
 class ManualClassification:
     r"""
     Get leaflet assignment from an external YAML file or a dictionary.
@@ -135,8 +140,9 @@ class ManualClassification:
     flip : bool, default=False
         Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
     """
-    def __new__(cls, input:typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.uint8]]], frequency:typing.Optional[gorder.Frequency]=None, flip:builtins.bool=False) -> ManualClassification: ...
+    def __new__(cls, input: typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.uint8]]], frequency: typing.Optional[gorder.Frequency] = None, flip: builtins.bool = False) -> ManualClassification: ...
 
+@typing.final
 class NdxClassification:
     r"""
     Get leaflet assignment from NDX file(s).
@@ -162,5 +168,30 @@ class NdxClassification:
     -----
     - No glob expansion is performed for the NDX files.
     """
-    def __new__(cls, ndx:typing.Sequence[builtins.str], heads:builtins.str, upper_leaflet:builtins.str, lower_leaflet:builtins.str, frequency:typing.Optional[gorder.Frequency]=None, flip:builtins.bool=False) -> NdxClassification: ...
+    def __new__(cls, ndx: typing.Sequence[builtins.str], heads: builtins.str, upper_leaflet: builtins.str, lower_leaflet: builtins.str, frequency: typing.Optional[gorder.Frequency] = None, flip: builtins.bool = False) -> NdxClassification: ...
+
+@typing.final
+class SphericalClusteringClassification:
+    r"""
+    Assign lipids into leaflets using gaussian mixture model.
+    
+    Reliable for spherical vesicles and fast. Do not use for anything other than vesicles!
+    
+    Parameters
+    ----------
+    heads : str
+        Selection query specifying reference atoms representing lipid headgroups
+        (typically phosphorus atoms or phosphate beads).
+        There must be exactly one such atom/bead per lipid molecule.
+    frequency : Optional[Frequency]
+        Frequency of classification. Defaults to every frame.
+    collect : Optional[Union[bool, str]], default=False
+        Determines whether leaflet classification data are saved and exported.
+        By default (`False`), data are not saved.
+        If `True`, data are saved internally and accessible via the Python API, but not written to a file.
+        If a string is provided, data are saved and written to the specified output file.
+    flip : bool, default=False
+        Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
+    """
+    def __new__(cls, heads: builtins.str, frequency: typing.Optional[gorder.Frequency] = None, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None, flip: builtins.bool = False) -> SphericalClusteringClassification: ...
 

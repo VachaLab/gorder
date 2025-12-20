@@ -4,6 +4,7 @@
 import builtins
 import typing
 
+@typing.final
 class EstimateError:
     r"""
     Parameters for estimating the error of the analysis.
@@ -23,5 +24,5 @@ class EstimateError:
     ConfigError
         If `n_blocks` is less than 2.
     """
-    def __new__(cls, n_blocks:builtins.int=5, output_convergence:typing.Optional[builtins.str]=None) -> EstimateError: ...
+    def __new__(cls, n_blocks: builtins.int = 5, output_convergence: typing.Optional[builtins.str] = None) -> EstimateError: ...
 

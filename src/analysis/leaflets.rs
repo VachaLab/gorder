@@ -19,7 +19,10 @@ use super::{
     topology::SystemTopology,
 };
 use crate::{
-    analysis::topology::molecule::handle_moltypes,
+    analysis::{
+        spherical_clustering::SystemSphericalClusterClassification,
+        topology::molecule::handle_moltypes,
+    },
     errors::{
         AnalysisError, ConfigError, ManualLeafletClassificationError,
         NdxLeafletClassificationError, TopologyError,
@@ -100,6 +103,16 @@ impl LeafletClassification {
                     return Err(TopologyError::NotEnoughAtomsToCluster(n_atoms));
                 }
             }
+            Self::SphericalClustering(params) => {
+                create_group(system, "ClusterHeads", params.heads())?;
+                // we need at least two atoms to cluster
+                let n_atoms = system
+                    .group_get_n_atoms(group_name!("ClusterHeads"))
+                    .expect(PANIC_MESSAGE);
+                if n_atoms < 2 {
+                    return Err(TopologyError::NotEnoughAtomsToCluster(n_atoms));
+                }
+            }
         }
 
         Ok(())
@@ -133,6 +146,7 @@ fn get_reference_methyls(molecule: &Group, system: &System) -> Result<Vec<usize>
 pub(crate) enum SystemLeafletClassificationType {
     MembraneCenter(Vector3D),
     Clustering(SystemClusterClassification),
+    SphericalClustering(SystemSphericalClusterClassification),
 }
 
 #[derive(Debug, Clone)]
@@ -184,6 +198,9 @@ impl SystemLeafletClassification {
             SystemLeafletClassificationType::Clustering(x) => {
                 x.cluster(system, pbc_handler, frame_index)
             }
+            SystemLeafletClassificationType::SphericalClustering(x) => {
+                x.cluster(system, pbc_handler)
+            }
         }
     }
 }
@@ -198,6 +215,7 @@ pub(crate) enum MoleculeLeafletClassification {
     Manual(ManualClassification, AssignedLeaflets),
     ManualNdx(NdxClassification, AssignedLeaflets),
     Clustering(ClusterClassification, AssignedLeaflets),
+    SphericalClustering(SphericalClusterClassification, AssignedLeaflets),
 }
 
 impl MoleculeLeafletClassification {
@@ -302,6 +320,16 @@ impl MoleculeLeafletClassification {
                 },
                 AssignedLeaflets::new(needs_shared_storage),
             ),
+            LeafletClassification::SphericalClustering(_) => Self::SphericalClustering(
+                SphericalClusterClassification {
+                    heads: Vec::new(),
+                    assignment: Vec::new(),
+                    frequency: params.get_frequency()
+                        * NonZeroUsize::new(step_size).expect(PANIC_MESSAGE),
+                    flip: params.get_flip(),
+                },
+                AssignedLeaflets::new(needs_shared_storage),
+            ),
         };
 
         Ok(classification)
@@ -330,6 +358,9 @@ impl MoleculeLeafletClassification {
             Self::Clustering(x, _) => {
                 x.insert(molecule, system)?;
             }
+            Self::SphericalClustering(x, _) => {
+                x.insert(molecule, system)?;
+            }
             // do nothing; manual "leaflet assignment file" classifier is not set-up like this
             Self::Manual(_, _) => (),
         }
@@ -345,7 +376,8 @@ impl MoleculeLeafletClassification {
             | Self::Individual(_, y)
             | Self::Manual(_, y)
             | Self::ManualNdx(_, y)
-            | Self::Clustering(_, y) => y.calc_assignment_statistics(),
+            | Self::Clustering(_, y)
+            | Self::SphericalClustering(_, y) => y.calc_assignment_statistics(),
         }
     }
 
@@ -359,6 +391,7 @@ impl MoleculeLeafletClassification {
             Self::Manual(x, _) => x.frequency,
             Self::ManualNdx(x, _) => x.frequency,
             Self::Clustering(x, _) => x.frequency,
+            Self::SphericalClustering(x, _) => x.frequency,
         }
     }
 
@@ -389,6 +422,9 @@ impl MoleculeLeafletClassification {
                 x.identify_leaflet(system, pbc_handler, molecule_index, current_frame)
             }
             MoleculeLeafletClassification::Clustering(x, _) => {
+                x.identify_leaflet(system, pbc_handler, molecule_index, current_frame)
+            }
+            MoleculeLeafletClassification::SphericalClustering(x, _) => {
                 x.identify_leaflet(system, pbc_handler, molecule_index, current_frame)
             }
         }
@@ -449,6 +485,15 @@ impl MoleculeLeafletClassification {
                 x.set_assignment(system_clustering);
                 y.assign_lipids(system, pbc_handler, x, current_frame)
             }
+            MoleculeLeafletClassification::SphericalClustering(x, y) => {
+                let system_clustering = match system_data.as_ref().expect(PANIC_MESSAGE) {
+                    SystemLeafletClassification(SystemLeafletClassificationType::SphericalClustering(x), _) => x,
+                    _ => panic!("FATAL GORDER ERROR | MoleculeLeafletClassification::assign_lipids | Unexpected `SystemLeafletClassification` variant for `spherical clustering` classification. {}", PANIC_MESSAGE),
+                };
+
+                x.set_assignment(system_clustering);
+                y.assign_lipids(system, pbc_handler, x, current_frame)
+            }
         }
     }
 
@@ -479,6 +524,9 @@ impl MoleculeLeafletClassification {
             MoleculeLeafletClassification::Clustering(x, y) => {
                 y.get_assigned_leaflet(molecule_index, current_frame, x.frequency)
             }
+            MoleculeLeafletClassification::SphericalClustering(x, y) => {
+                y.get_assigned_leaflet(molecule_index, current_frame, x.frequency)
+            }
         }
     }
 
@@ -491,6 +539,7 @@ impl MoleculeLeafletClassification {
             | MoleculeLeafletClassification::Local(_, shared)
             | MoleculeLeafletClassification::Individual(_, shared)
             | MoleculeLeafletClassification::Clustering(_, shared)
+            | MoleculeLeafletClassification::SphericalClustering(_, shared)
             | MoleculeLeafletClassification::Manual(_, shared)
             | MoleculeLeafletClassification::ManualNdx(_, shared) => {
                 Some(shared.shared.as_ref()?.0.lock().clone())
@@ -1239,6 +1288,79 @@ impl ClusterClassification {
                 self.assignment[i] = Leaflet::Lower;
             } else {
                 panic!("FATAL GORDER ERROR | ClusterClassification::set_assignment | Head `{}` not classified into any leaflet. {}", head, PANIC_MESSAGE);
+            }
+        }
+    }
+}
+
+/// Leaflet classification method that uses Gaussian Mixture Model to identify leaflets.
+#[derive(Debug, Clone)]
+pub(super) struct SphericalClusterClassification {
+    /// Indices of headgroup identifiers (one per molecule).
+    heads: Vec<usize>,
+    /// Assignment for individual lipid molecules.
+    assignment: Vec<Leaflet>,
+    /// Frequency with which the assignment should be performed.
+    frequency: Frequency,
+    /// Treat the upper leaflet as lower leaflet and vice versa.
+    flip: bool,
+}
+
+impl LeafletClassifier for SphericalClusterClassification {
+    #[inline(always)]
+    fn n_molecules(&self) -> usize {
+        self.heads.len()
+    }
+
+    #[inline(always)]
+    fn identify_leaflet<'a>(
+        &mut self,
+        _system: &'a System,
+        _pbc_handler: &'a impl PBCHandler<'a>,
+        molecule_index: usize,
+        _current_frame: usize,
+    ) -> Result<Leaflet, AnalysisError> {
+        Ok(*self.
+            assignment
+            .get(molecule_index)
+            .unwrap_or_else(|| panic!("FATAL GORDER ERROR | SphericalClusterClassification::identify_leaflet | Molecule index `{}` not found in the assignment. {}", 
+            molecule_index, PANIC_MESSAGE))
+        )
+    }
+
+    #[inline(always)]
+    fn maybe_flip(&self, leaflet: Leaflet) -> Leaflet {
+        leaflet.maybe_flip(self.flip)
+    }
+}
+
+impl SphericalClusterClassification {
+    /// Insert a new molecule into the classifier.
+    #[inline(always)]
+    fn insert(&mut self, molecule: &Group, system: &System) -> Result<(), TopologyError> {
+        self.heads.push(get_reference_head(
+            molecule,
+            system,
+            group_name!("ClusterHeads"),
+        )?);
+        self.assignment.push(Leaflet::Upper);
+        Ok(())
+    }
+
+    /// Set assignment for the relevant molecules from the system assignment structure.
+    fn set_assignment(&mut self, system_assignment: &SystemSphericalClusterClassification) {
+        let clusters = system_assignment
+            .clusters()
+            .as_ref()
+            .unwrap_or_else(|| panic!("FATAL GORDER ERROR | SphericalClusterClassification::set_assignment | Clusters should already be assigned. {}", PANIC_MESSAGE));
+
+        for (i, head) in self.heads.iter().enumerate() {
+            if clusters.upper.contains(head) {
+                self.assignment[i] = Leaflet::Upper;
+            } else if clusters.lower.contains(head) {
+                self.assignment[i] = Leaflet::Lower;
+            } else {
+                panic!("FATAL GORDER ERROR | SphericalClusterClassification::set_assignment | Head `{}` not classified into any leaflet. {}", head, PANIC_MESSAGE);
             }
         }
     }

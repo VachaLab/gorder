@@ -21,6 +21,7 @@ pub(crate) mod normal;
 pub(crate) mod order;
 pub(crate) mod ordermap;
 pub(crate) mod pbc;
+mod spherical_clustering;
 mod spinner;
 mod structure;
 pub(crate) mod timewise;

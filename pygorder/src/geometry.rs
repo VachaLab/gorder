@@ -26,8 +26,10 @@ macro_rules! try_extract {
 #[derive(Clone)]
 pub struct Geometry(pub(crate) RsGeometry);
 
-impl<'source> FromPyObject<'source> for Geometry {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for Geometry {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         try_extract!(obj, Cuboid, Cylinder, Sphere);
 
         Err(ConfigError::new_err(
@@ -77,7 +79,7 @@ impl Cuboid {
         reference: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
-            GeomReference::extract_bound(&reference)?
+            GeomReference::extract(reference.as_borrowed())?
         } else {
             GeomReference(RsReference::Point(Vector3D::default()))
         };
@@ -130,7 +132,7 @@ impl Cylinder {
         reference: Option<Bound<'a, PyAny>>,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
-            GeomReference::extract_bound(&reference)?
+            GeomReference::extract(reference.as_borrowed())?
         } else {
             GeomReference(RsReference::Point(Vector3D::default()))
         };
@@ -175,7 +177,7 @@ impl Sphere {
         reference: Option<Bound<'a, PyAny>>,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
-            GeomReference::extract_bound(&reference)?
+            GeomReference::extract(reference.as_borrowed())?
         } else {
             GeomReference(RsReference::Point(Vector3D::default()))
         };
@@ -190,8 +192,10 @@ impl Sphere {
 #[derive(Clone)]
 pub struct GeomReference(RsReference);
 
-impl<'source> FromPyObject<'source> for GeomReference {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for GeomReference {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         // try to extract as Vector3D
         if let Ok(pos) = obj.extract::<[f32; 3]>() {
             return Ok(Self(RsReference::Point(Vector3D::new(

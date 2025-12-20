@@ -1,3 +1,10 @@
+## Version 1.3.0
+
+### Faster leaflet assignment for vesicles
+- Implemented a new leaflet classification method, `SphericalClustering`, exclusively for vesicles. This method classifies lipids using a 2-component Gaussian Mixture Model based on the distances between lipid headgroups and the vesicle center of geometry. This method is **much** faster than `Clustering`, almost on a par with the `Individual` classification method, but is only usable for systems with a single unilamellar vesicle. See [the manual](https://ladme.github.io/gorder-manual/leaflets.html#spherical-clustering-method-for-leaflet-classification) for more details.
+
+***
+
 ## Version 1.2.0
 ### Exporting internal data
 - You can now collect and export information about which leaflets individual lipids were assigned to during the analysis, as well as dynamically calculated membrane normals, to external files. This is only performed when requested in the analysis setup. The data can also be accessed via the Rust and Python APIs. Read more in the corresponding sections of the manual: [Exporting lipid assignment data](https://ladme.github.io/gorder-manual/leaflets_export.html) and [Exporting membrane normals](https://ladme.github.io/gorder-manual/normals_export.html).

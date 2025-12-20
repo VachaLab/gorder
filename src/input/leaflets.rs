@@ -30,6 +30,7 @@ pub enum LeafletClassification {
     FromMap(FromMapParams),
     FromNdx(FromNdxParams),
     Clustering(ClusteringParams),
+    SphericalClustering(SphericalClusteringParams),
 }
 
 impl fmt::Display for LeafletClassification {
@@ -42,6 +43,7 @@ impl fmt::Display for LeafletClassification {
             | LeafletClassification::FromMap(_)
             | LeafletClassification::FromNdx(_) => write!(f, "manual"),
             LeafletClassification::Clustering(_) => write!(f, "clustering"),
+            LeafletClassification::SphericalClustering(_) => write!(f, "spherical clustering"),
         }
     }
 }
@@ -165,12 +167,28 @@ impl LeafletClassification {
     /// Get leaflet assignment using spectral clustering.
     ///
     /// This is the only automatic method applicable to
-    /// curved membranes such as vesicles, buckled membranes, or tubes.
+    /// membranes with any curved geometry
+    /// (vesicles, buckled membranes, tubes).
     ///
     /// ## Parameters
     /// - `heads`: GSL query specifying the atoms to use as head identifiers of molecules
     pub fn clustering(heads: &str) -> LeafletClassification {
         Self::Clustering(ClusteringParams {
+            heads: heads.to_owned(),
+            frequency: Frequency::default(),
+            collect: Collect::default(),
+            flip: Default::default(),
+        })
+    }
+
+    /// Get leaflet assignment using gaussian mixture model.
+    ///
+    /// This method is ONLY applicable to unilamellar vesicles.
+    ///
+    /// ## Parameters
+    /// - `heads`: GSL query specifying the atoms to use as head identifiers of molecules
+    pub fn spherical_clustering(heads: &str) -> LeafletClassification {
+        Self::SphericalClustering(SphericalClusteringParams {
             heads: heads.to_owned(),
             frequency: Frequency::default(),
             collect: Collect::default(),
@@ -191,6 +209,7 @@ impl LeafletClassification {
             LeafletClassification::FromMap(x) => x.frequency = frequency,
             LeafletClassification::FromNdx(x) => x.frequency = frequency,
             LeafletClassification::Clustering(x) => x.frequency = frequency,
+            LeafletClassification::SphericalClustering(x) => x.frequency = frequency,
         }
 
         self
@@ -200,7 +219,7 @@ impl LeafletClassification {
     /// If not set, the globally specified membrane normal (Z-axis by default) is used.
     /// You only need to set this value when using a dynamic membrane normal as the global one.
     ///
-    /// The method has no effect if you are assigning lipids manually into leaflets.
+    /// The method has no effect if you are assigning lipids manually into leaflets or if you are using clustering.
     #[inline(always)]
     pub fn with_membrane_normal(mut self, membrane_normal: Axis) -> Self {
         match &mut self {
@@ -213,6 +232,7 @@ impl LeafletClassification {
             | LeafletClassification::FromNdx(_) => (),
             // ignore for clustering
             LeafletClassification::Clustering(_) => (),
+            LeafletClassification::SphericalClustering(_) => (),
         }
 
         self
@@ -232,6 +252,7 @@ impl LeafletClassification {
             LeafletClassification::Local(x) => x.collect = collect.into(),
             LeafletClassification::Individual(x) => x.collect = collect.into(),
             LeafletClassification::Clustering(x) => x.collect = collect.into(),
+            LeafletClassification::SphericalClustering(x) => x.collect = collect.into(),
             // panic for manual classification
             LeafletClassification::FromFile(_) | LeafletClassification::FromMap(_) | LeafletClassification::FromNdx(_) =>
                 panic!("Collecting leaflet classification data is not supported for manual leaflet classification.\nThe data are already collected!"),
@@ -252,6 +273,7 @@ impl LeafletClassification {
             LeafletClassification::FromMap(x) => x.flip = flip,
             LeafletClassification::FromNdx(x) => x.flip = flip,
             LeafletClassification::Clustering(x) => x.flip = flip,
+            LeafletClassification::SphericalClustering(x) => x.flip = flip,
         }
 
         self
@@ -268,6 +290,7 @@ impl LeafletClassification {
             LeafletClassification::FromMap(x) => x.frequency(),
             LeafletClassification::FromNdx(x) => x.frequency(),
             LeafletClassification::Clustering(x) => x.frequency(),
+            LeafletClassification::SphericalClustering(x) => x.frequency(),
         }
     }
 
@@ -282,7 +305,8 @@ impl LeafletClassification {
             LeafletClassification::FromFile(_)
             | LeafletClassification::FromMap(_)
             | LeafletClassification::FromNdx(_) => None,
-            LeafletClassification::Clustering(_) => None,
+            LeafletClassification::Clustering(_)
+            | LeafletClassification::SphericalClustering(_) => None,
         }
     }
 
@@ -295,6 +319,7 @@ impl LeafletClassification {
             LeafletClassification::Local(x) => x.collect(),
             LeafletClassification::Individual(x) => x.collect(),
             LeafletClassification::Clustering(x) => x.collect(),
+            LeafletClassification::SphericalClustering(x) => x.collect(),
             LeafletClassification::FromFile(_)
             | LeafletClassification::FromMap(_)
             | LeafletClassification::FromNdx(_) => &Collect::Boolean(false),
@@ -312,6 +337,7 @@ impl LeafletClassification {
             LeafletClassification::FromMap(x) => x.flip(),
             LeafletClassification::FromNdx(x) => x.flip(),
             LeafletClassification::Clustering(x) => x.flip(),
+            LeafletClassification::SphericalClustering(x) => x.flip(),
         }
     }
 
@@ -663,10 +689,31 @@ where
     deserializer.deserialize_any(StringOrVecVisitor)
 }
 
-/// Using the spectral clustering. The only automatic method that can be used for membranes with curved geometry.
+/// Using the spectral clustering. The only automatic method that can be used for membranes with arbitrary curved geometry.
 #[derive(Debug, Clone, Getters, CopyGetters, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ClusteringParams {
+    /// Reference atoms identifying lipid headgroups (usually a phosphorus atom or a phosphate bead).
+    /// There must only be one such atom/bead per lipid molecule.
+    #[getset(get = "pub")]
+    heads: String,
+    /// Frequency of leaflet assignment.
+    #[getset(get_copy = "pub")]
+    #[serde(default)]
+    frequency: Frequency,
+    /// Should the leaflet assignment data be collected, stored and exported into an output file?
+    #[getset(get = "pub")]
+    #[serde(default, alias = "export")]
+    collect: Collect,
+    /// Will treat upper leaflet as lower leaflet and vice versa.
+    #[getset(get_copy = "pub")]
+    #[serde(default)] // false by default
+    flip: bool,
+}
+
+#[derive(Debug, Clone, Getters, CopyGetters, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SphericalClusteringParams {
     /// Reference atoms identifying lipid headgroups (usually a phosphorus atom or a phosphate bead).
     /// There must only be one such atom/bead per lipid molecule.
     #[getset(get = "pub")]
@@ -1080,6 +1127,26 @@ export: \"leaflets.yaml\"",
                 _ => panic!("Invalid leaflet classification returned."),
             }
         }
+
+        for string in [
+            "!SphericalClustering
+heads: \"name P\"
+collect: \"leaflets.yaml\"",
+            "!SphericalClustering
+heads: \"name P\"
+export: \"leaflets.yaml\"",
+        ] {
+            match serde_yaml::from_str(string).unwrap() {
+                LeafletClassification::SphericalClustering(params) => {
+                    assert_eq!(params.heads(), "name P");
+                    assert_eq!(
+                        params.collect(),
+                        &Collect::File(String::from("leaflets.yaml"))
+                    );
+                }
+                _ => panic!("Invalid leaflet classification returned."),
+            }
+        }
     }
 
     #[test]
@@ -1133,6 +1200,18 @@ export: \"leaflets.yaml\"",
 
         match serde_yaml::from_str(string).unwrap() {
             LeafletClassification::Clustering(params) => {
+                assert_eq!(params.heads(), "name P");
+                assert!(params.flip())
+            }
+            _ => panic!("Invalid leaflet classification returned."),
+        }
+
+        let string = "!SphericalClustering
+  heads: \"name P\"
+  flip: true";
+
+        match serde_yaml::from_str(string).unwrap() {
+            LeafletClassification::SphericalClustering(params) => {
                 assert_eq!(params.heads(), "name P");
                 assert!(params.flip())
             }
