@@ -57,7 +57,7 @@ Outputs results in YAML, XVG, CSV, and custom "table" format.
 Is completely force-field agnostic. Martini? CHARMM? Slipids? Berger lipids? Your own toy force-field? As long as your lipids have bonds, it will work.
 
 - 🍃 [**Leaflet-wise analysis**](https://ladme.github.io/gorder-manual/leaflets.html)  
-Performs scrambling-safe assignment of lipids to membrane leaflets using four different methods, and then calculates lipid order parameters for individual leaflets.
+Performs scrambling-safe assignment of lipids to membrane leaflets using one of five different methods, and then calculates lipid order parameters for individual leaflets.
 
 - 🟠 [**Order parameters for vesicles**](https://ladme.github.io/gorder-manual/membrane_normal.html)  
 Dynamically calculates membrane normals based on the membrane's shape, enabling the calculation of order parameters for highly curved systems such as micelles, tubes, and vesicles.
