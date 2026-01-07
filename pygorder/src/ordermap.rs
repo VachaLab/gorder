@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::ordermap::GridSpan as RsSpan;
 use gorder_core::input::ordermap::OrderMap as RsMap;
