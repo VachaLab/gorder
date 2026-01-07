@@ -683,6 +683,8 @@ dependencies = [
 [[package]]
 name = "groan_rs"
 version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b73fb1b48599505b2a631f423cd53e372274907e136932ed39807b7ae7e18d4d"
 dependencies = [
  "cc",
  "colored 3.0.0",
