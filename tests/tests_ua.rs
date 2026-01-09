@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! Integration tests for the calculation of united-atom order parameters.
 

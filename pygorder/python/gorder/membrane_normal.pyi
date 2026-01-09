@@ -4,6 +4,7 @@
 import builtins
 import typing
 
+@typing.final
 class DynamicNormal:
     r"""
     Request a dynamic local membrane normal calculation.
@@ -29,5 +30,5 @@ class DynamicNormal:
     ConfigError
         If `radius` is not positive.
     """
-    def __new__(cls, heads:builtins.str, radius:builtins.float=2.0, collect:typing.Optional[typing.Union[builtins.bool, builtins.str]]=None) -> DynamicNormal: ...
+    def __new__(cls, heads: builtins.str, radius: builtins.float = 2.0, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None) -> DynamicNormal: ...
 

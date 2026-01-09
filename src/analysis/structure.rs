@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! Handles reading the input structure and topology and setting up the system.
 
@@ -229,6 +229,7 @@ fn should_guess_elements(analysis: &Analysis) -> bool {
         Some(LeafletClassification::FromNdx(x)) => has_element(x.heads()),
         Some(LeafletClassification::FromFile(_)) | Some(LeafletClassification::FromMap(_)) => false,
         Some(LeafletClassification::Clustering(x)) => has_element(x.heads()),
+        Some(LeafletClassification::SphericalClustering(x)) => has_element(x.heads()),
     } || match analysis.geometry() {
         Some(Geometry::Cuboid(x)) => reference_has_element(x.reference()),
         Some(Geometry::Cylinder(x)) => reference_has_element(x.reference()),

@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use std::sync::Arc;
 
@@ -113,8 +113,10 @@ impl UAOrder {
 #[derive(Clone)]
 pub struct AnalysisType(RsAnalysisType);
 
-impl<'source> FromPyObject<'source> for AnalysisType {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for AnalysisType {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         if let Ok(analysis_type) = obj.extract::<AAOrder>() {
             return Ok(AnalysisType(analysis_type.0));
         }
@@ -136,8 +138,10 @@ impl<'source> FromPyObject<'source> for AnalysisType {
 #[derive(Clone)]
 pub struct TrajectoryInput(RsTrajectoryInput);
 
-impl<'source> FromPyObject<'source> for TrajectoryInput {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for TrajectoryInput {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         if let Ok(string) = obj.extract::<String>() {
             return Ok(TrajectoryInput(string.into()));
         }
@@ -189,7 +193,7 @@ impl<'source> FromPyObject<'source> for TrajectoryInput {
 ///     Minimum number of samples required for each heavy atom or bond type to compute its order parameter. Defaults to 1.
 /// n_threads : Optional[int], default=None
 ///     Number of threads to use for analysis. Defaults to 1.
-/// leaflets : Optional[Union[GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, ManualClassification, NdxClassification]], default=None
+/// leaflets : Optional[Union[GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, SphericalClusteringClassification, ManualClassification, NdxClassification]], default=None
 ///     Defines how lipids are assigned to membrane leaflets. If provided, order parameters are calculated per leaflet.
 /// ordermap : Optional[OrderMap], default=None
 ///     Specifies parameters for ordermap calculations. If not provided, ordermaps are not generated.
@@ -261,7 +265,7 @@ impl Analysis {
         min_samples: Option<usize>,
         n_threads: Option<usize>,
         #[gen_stub(override_type(
-            type_repr = "typing.Optional[typing.Union[gorder.leaflets.GlobalClassification, gorder.leaflets.LocalClassification, gorder.leaflets.IndividualClassification, gorder.leaflets.ClusteringClassification, gorder.leaflets.ManualClassification, gorder.leaflets.NdxClassification]]", imports=("typing")
+            type_repr = "typing.Optional[typing.Union[gorder.leaflets.GlobalClassification, gorder.leaflets.LocalClassification, gorder.leaflets.IndividualClassification, gorder.leaflets.ClusteringClassification, gorder.leaflets.SphericalClusteringClassification, gorder.leaflets.ManualClassification, gorder.leaflets.NdxClassification]]", imports=("typing")
         ))]
         leaflets: Option<Bound<'a, PyAny>>,
         #[gen_stub(override_type(type_repr = "typing.Optional[gorder.ordermap.OrderMap]"))]
@@ -279,16 +283,16 @@ impl Analysis {
         overwrite: Option<bool>,
     ) -> PyResult<Self> {
         // convert to Rust
-        let trajectory = TrajectoryInput::extract_bound(&trajectory)?;
-        let analysis_type = AnalysisType::extract_bound(&analysis_type)?;
+        let trajectory = TrajectoryInput::extract(trajectory.as_borrowed())?;
+        let analysis_type = AnalysisType::extract(analysis_type.as_borrowed())?;
         let membrane_normal = membrane_normal
-            .map(|normal| MembraneNormal::extract_bound(&normal))
+            .map(|normal| MembraneNormal::extract(normal.as_borrowed()))
             .transpose()?;
         let leaflets = leaflets
-            .map(|method| LeafletClassification::extract_bound(&method))
+            .map(|method| LeafletClassification::extract(method.as_borrowed()))
             .transpose()?;
         let geometry = geometry
-            .map(|shape| Geometry::extract_bound(&shape))
+            .map(|shape| Geometry::extract(shape.as_borrowed()))
             .transpose()?;
 
         let mut builder: RsAnalysisBuilder = RsAnalysis::builder();

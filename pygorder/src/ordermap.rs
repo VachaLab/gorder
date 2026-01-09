@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::ordermap::GridSpan as RsSpan;
 use gorder_core::input::ordermap::OrderMap as RsMap;
@@ -76,8 +76,8 @@ impl OrderMap {
             }
 
             [
-                GridSpan::extract_bound(&dim.get_item(0).unwrap())?,
-                GridSpan::extract_bound(&dim.get_item(1).unwrap())?,
+                GridSpan::extract(dim.get_item(0).unwrap().as_borrowed())?,
+                GridSpan::extract(dim.get_item(1).unwrap().as_borrowed())?,
             ]
         } else {
             [GridSpan::default(), GridSpan::default()]
@@ -102,8 +102,10 @@ impl OrderMap {
 
 pub struct GridSpan(RsSpan);
 
-impl<'source> FromPyObject<'source> for GridSpan {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for GridSpan {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         // try to extract as [f32; 2]
         if let Ok(manual) = obj.extract::<[f32; 2]>() {
             return Ok(Self(

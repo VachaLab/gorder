@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::DynamicNormal as RsDynamic;
 use gorder_core::input::MembraneNormal as RsNormal;
@@ -23,8 +23,10 @@ use crate::ConfigError;
 #[derive(Clone)]
 pub struct MembraneNormal(pub(crate) RsNormal);
 
-impl<'source> FromPyObject<'source> for MembraneNormal {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for MembraneNormal {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         // try to extract as DynamicNormal
         if let Ok(dyn_norm) = obj.extract::<DynamicNormal>() {
             return Ok(MembraneNormal(RsNormal::Dynamic(dyn_norm.0)));
@@ -39,7 +41,7 @@ impl<'source> FromPyObject<'source> for MembraneNormal {
             }
         }
         // try to extract as a dictionary
-        if let Ok(map) = extract_map(obj) {
+        if let Ok(map) = extract_map(&obj) {
             return Ok(MembraneNormal(RsNormal::FromMap(map)));
         }
 
@@ -99,7 +101,7 @@ impl DynamicNormal {
 /// Attempt to add request for data collection to dynamic membrane normals.
 fn add_collect<'a>(normals: RsDynamic, collect: Option<Bound<'a, PyAny>>) -> PyResult<RsDynamic> {
     if let Some(collect) = collect {
-        return Ok(normals.with_collect(Collect::extract_bound(&collect)?.0));
+        return Ok(normals.with_collect(Collect::extract(collect.as_borrowed())?.0));
     }
 
     Ok(normals)
@@ -109,7 +111,7 @@ fn add_collect<'a>(normals: RsDynamic, collect: Option<Bound<'a, PyAny>>) -> PyR
 /// The numpy array must have shape [outer, inner, 3].
 fn extract_nested_vector(py_obj: &Bound<'_, PyAny>) -> PyResult<Vec<Vec<Vector3D>>> {
     // try to downcast the input to a PyArray3 of f32
-    let array = py_obj.downcast::<PyArray3<f32>>().map_err(|_| {
+    let array = py_obj.cast::<PyArray3<f32>>().map_err(|_| {
         ConfigError::new_err("expected a 3D numpy array for dynamic membrane normals")
     })?;
     let view: ArrayView3<f32> = unsafe { array.as_array() };
@@ -140,7 +142,7 @@ fn extract_nested_vector(py_obj: &Bound<'_, PyAny>) -> PyResult<Vec<Vec<Vector3D
 /// Converts a Python dictionary whose keys are strings and values are 3D numpy arrays
 /// into a hashbrown::HashMap<String, Vec<Vec<Vector3D>>>.
 fn extract_map(py_obj: &Bound<'_, PyAny>) -> PyResult<HashMap<String, Vec<Vec<Vector3D>>>> {
-    let dict = py_obj.downcast::<PyDict>().map_err(|_| {
+    let dict = py_obj.cast::<PyDict>().map_err(|_| {
         ConfigError::new_err(
             "expected a dictionary using molecule types as keys and 3D numpy arrays with shape (n_frames, n_molecules, 3) as values",
         )

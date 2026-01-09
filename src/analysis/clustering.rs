@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! Implementation of spectral clustering for leaflet classification.
 
@@ -81,7 +81,7 @@ impl SystemClusterClassification {
         let mut converter = HashMap::new();
         for (i, atom) in system
             .group_iter(group_name!("ClusterHeads"))
-            .unwrap_or_else(|_| panic!("Group `ClusterHeads` should exist."))
+            .unwrap_or_else(|_| panic!("Group `ClusterHeads` should exist.  {}", PANIC_MESSAGE))
             .enumerate()
         {
             converter.insert(atom.get_index(), i);
@@ -714,7 +714,7 @@ If the issue persists, please report it by opening an issue at `github.com/Ladme
     }
 }
 
-/// Leaflets assigned using spectral clustering.
+/// Leaflets assigned using clustering.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Clusters {
     /// Upper leaflet.
@@ -722,7 +722,7 @@ pub(super) struct Clusters {
     /// Lower leaflet.
     pub(super) lower: HashSet<usize>,
     /// Smallest index of the headgroup-representing atoms.
-    min_index: usize,
+    pub(super) min_index: usize,
 }
 
 impl Clusters {

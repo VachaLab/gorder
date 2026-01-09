@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! Integration tests for the calculation of coarse-grained order parameters.
 
@@ -3377,6 +3377,108 @@ fn test_cg_order_vesicle_dynamic_membrane_normal_yaml() {
 }
 
 #[test]
+fn test_cg_order_vesicle_dynamic_membrane_normal_spherical_clustering_yaml() {
+    for n_threads in [1, 3, 8, 16] {
+        for freq in [
+            Frequency::once(),
+            Frequency::every(1).unwrap(),
+            Frequency::every(5).unwrap(),
+        ] {
+            let output = NamedTempFile::new().unwrap();
+            let path_to_output = output.path().to_str().unwrap();
+
+            let analysis = Analysis::builder()
+                .structure("tests/files/vesicle.tpr")
+                .trajectory("tests/files/vesicle.xtc")
+                .output(path_to_output)
+                .analysis_type(AnalysisType::cgorder(
+                    "name C1A D2A C3A C4A C1B C2B C3B C4B",
+                ))
+                .membrane_normal(DynamicNormal::new("name PO4", 2.0).unwrap())
+                .leaflets(
+                    LeafletClassification::spherical_clustering("name PO4").with_frequency(freq),
+                )
+                .n_threads(n_threads)
+                .silent()
+                .overwrite()
+                .build()
+                .unwrap();
+
+            analysis.run().unwrap().write().unwrap();
+
+            assert_eq_order(
+                path_to_output,
+                "tests/files/cg_order_vesicle_leaflets.yaml",
+                1,
+            );
+        }
+    }
+}
+
+#[test]
+fn test_cg_order_vesicle_dynamic_membrane_normal_spherical_clustering_yaml_flip() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/vesicle.tpr")
+        .trajectory("tests/files/vesicle.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::cgorder(
+            "name C1A D2A C3A C4A C1B C2B C3B C4B",
+        ))
+        .membrane_normal(DynamicNormal::new("name PO4", 2.0).unwrap())
+        .leaflets(LeafletClassification::spherical_clustering("name PO4").with_flip(true))
+        .n_threads(1)
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/cg_order_vesicle_leaflets_flipped.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_cg_order_centered_vesicle_dynamic_membrane_normal_spherical_clustering_yaml() {
+    for n_threads in [1, 3, 8, 16] {
+        for pbc in [true, false] {
+            let output = NamedTempFile::new().unwrap();
+            let path_to_output = output.path().to_str().unwrap();
+
+            let analysis = Analysis::builder()
+                .structure("tests/files/vesicle.tpr")
+                .trajectory("tests/files/vesicle_centered.xtc")
+                .output(path_to_output)
+                .analysis_type(AnalysisType::cgorder(
+                    "name C1A D2A C3A C4A C1B C2B C3B C4B",
+                ))
+                .membrane_normal(DynamicNormal::new("name PO4", 2.0).unwrap())
+                .leaflets(LeafletClassification::spherical_clustering("name PO4"))
+                .handle_pbc(pbc)
+                .n_threads(n_threads)
+                .silent()
+                .overwrite()
+                .build()
+                .unwrap();
+
+            analysis.run().unwrap().write().unwrap();
+
+            assert_eq_order(
+                path_to_output,
+                "tests/files/cg_order_vesicle_leaflets.yaml",
+                1,
+            );
+        }
+    }
+}
+
+#[test]
 fn test_cg_order_vesicle_membrane_normals_from_file_yaml() {
     for n_threads in [1, 3, 8, 16] {
         let output = NamedTempFile::new().unwrap();
@@ -3480,6 +3582,53 @@ fn test_cg_order_vesicle_dynamic_membrane_normals_leflets_export() {
     assert!(diff_files_ignore_first(
         path_to_output_leaflets,
         "tests/files/leaflets_vesicle.yaml",
+        1
+    ));
+}
+
+#[test]
+fn test_cg_order_vesicle_dynamic_membrane_normals_spherical_clustering_leflets_export() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let output_normals = NamedTempFile::new().unwrap();
+    let path_to_output_normals = output_normals.path().to_str().unwrap();
+
+    let output_leaflets = NamedTempFile::new().unwrap();
+    let path_to_output_leaflets = output_leaflets.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/vesicle.tpr")
+        .trajectory("tests/files/vesicle.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::cgorder(
+            "name C1A D2A C3A C4A C1B C2B C3B C4B",
+        ))
+        .membrane_normal(
+            DynamicNormal::new("name PO4", 2.0)
+                .unwrap()
+                .with_collect(path_to_output_normals),
+        )
+        .leaflets(
+            LeafletClassification::spherical_clustering("name PO4")
+                .with_collect(path_to_output_leaflets),
+        )
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/cg_order_vesicle_leaflets.yaml",
+        1,
+    );
+    assert_eq_normals(path_to_output_normals, "tests/files/normals_vesicle.yaml");
+    assert!(diff_files_ignore_first(
+        path_to_output_leaflets,
+        "tests/files/leaflets_vesicle_all.yaml",
         1
     ));
 }

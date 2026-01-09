@@ -1,6 +1,6 @@
 """
 Released under MIT License.
-Copyright (c) 2024-2025 Ladislav Bartos
+Copyright (c) 2024-2026 Ladislav Bartos
 """
 
 # pyright: reportArgumentType=false, reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportOptionalIterable=false

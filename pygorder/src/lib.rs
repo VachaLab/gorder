@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::Collect as RsCollect;
 use gorder_core::input::{Axis, Plane};
@@ -135,8 +135,10 @@ impl AtomType {
 #[derive(Clone)]
 pub struct Collect(RsCollect);
 
-impl<'source> FromPyObject<'source> for Collect {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for Collect {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         // try to extract as boolean
         if let Ok(boolean) = obj.extract::<bool>() {
             return Ok(Collect(RsCollect::Boolean(boolean)));
@@ -192,6 +194,7 @@ fn gorder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     leaflets.add_class::<leaflets::LocalClassification>()?;
     leaflets.add_class::<leaflets::IndividualClassification>()?;
     leaflets.add_class::<leaflets::ClusteringClassification>()?;
+    leaflets.add_class::<leaflets::SphericalClusteringClassification>()?;
     leaflets.add_class::<leaflets::ManualClassification>()?;
     leaflets.add_class::<leaflets::NdxClassification>()?;
     m.add_submodule(&leaflets)?;

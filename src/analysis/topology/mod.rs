@@ -1,8 +1,9 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! Implementation of a structure describing the topology of the entire system.
 
+use crate::analysis::spherical_clustering::SystemSphericalClusterClassification;
 use crate::input::{Analysis, EstimateError, LeafletClassification, OrderMap};
 use crate::PANIC_MESSAGE;
 
@@ -90,6 +91,15 @@ impl SystemTopology {
                 x.frequency(),
                 step_size,
             )),
+            Some(LeafletClassification::SphericalClustering(x)) => {
+                Some(SystemLeafletClassification::new(
+                    SystemLeafletClassificationType::SphericalClustering(
+                        SystemSphericalClusterClassification::new(),
+                    ),
+                    x.frequency(),
+                    step_size,
+                ))
+            }
             _ => None,
         };
 

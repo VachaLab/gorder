@@ -4,6 +4,7 @@
 import builtins
 import typing
 
+@typing.final
 class OrderMap:
     r"""
     Parameters for generating order maps.
@@ -37,5 +38,5 @@ class OrderMap:
         If `min_samples` <= 0, `bin_size` <= 0, any `dim` span is invalid (first value <= second),
         or if `plane` is not one of the allowed values (`xy`, `xz`, `yz`).
     """
-    def __new__(cls, output_directory:typing.Optional[builtins.str]=None, min_samples:builtins.int=1, dim:typing.Optional[typing.Sequence[typing.Union[builtins.str, typing.Sequence[builtins.float]]]]=None, bin_size:typing.Sequence[builtins.float]=[0.10000000149011612, 0.10000000149011612], plane:typing.Optional[builtins.str]=None) -> OrderMap: ...
+    def __new__(cls, output_directory: typing.Optional[builtins.str] = None, min_samples: builtins.int = 1, dim: typing.Optional[typing.Sequence[typing.Union[builtins.str, typing.Sequence[builtins.float]]]] = None, bin_size: typing.Sequence[builtins.float] = [0.10000000149011612, 0.10000000149011612], plane: typing.Optional[builtins.str] = None) -> OrderMap: ...
 

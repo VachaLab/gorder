@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::Frequency as RsFreq;
 use gorder_core::input::LeafletClassification as RsLeafletClassification;
@@ -31,20 +31,23 @@ macro_rules! try_extract {
 #[derive(Clone)]
 pub struct LeafletClassification(pub(crate) RsLeafletClassification);
 
-impl<'source> FromPyObject<'source> for LeafletClassification {
-    fn extract_bound(obj: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'source> FromPyObject<'source, '_> for LeafletClassification {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
         try_extract!(
             obj,
             GlobalClassification,
             LocalClassification,
             IndividualClassification,
             ClusteringClassification,
+            SphericalClusteringClassification,
             ManualClassification,
             NdxClassification
         );
 
         Err(ConfigError::new_err(
-            "expected an instance of GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, ManualClassification, or NdxClassification",
+            "expected an instance of GlobalClassification, LocalClassification, IndividualClassification, ClusteringClassification, SphericalClusteringClassification, ManualClassification, or NdxClassification",
         ))
     }
 }
@@ -343,6 +346,59 @@ impl ClusteringClassification {
     }
 }
 
+/// Assign lipids into leaflets using gaussian mixture model.
+///
+/// Reliable for spherical vesicles and fast. Do not use for anything other than vesicles!
+///
+/// Parameters
+/// ----------
+/// heads : str
+///     Selection query specifying reference atoms representing lipid headgroups
+///     (typically phosphorus atoms or phosphate beads).
+///     There must be exactly one such atom/bead per lipid molecule.
+/// frequency : Optional[Frequency]
+///     Frequency of classification. Defaults to every frame.
+/// collect : Optional[Union[bool, str]], default=False
+///     Determines whether leaflet classification data are saved and exported.
+///     By default (`False`), data are not saved.
+///     If `True`, data are saved internally and accessible via the Python API, but not written to a file.
+///     If a string is provided, data are saved and written to the specified output file.
+/// flip : bool, default=False
+///     Flip the assignment. Upper leaflet becomes lower leaflet and vice versa. The default value is False.
+#[gen_stub_pyclass]
+#[pyclass(module = "gorder.leaflets")]
+#[derive(Clone)]
+pub struct SphericalClusteringClassification(RsLeafletClassification);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl SphericalClusteringClassification {
+    #[new]
+    #[pyo3(signature = (heads, frequency = None, collect = None, flip = false))]
+    pub fn new<'a>(
+        heads: &str,
+        #[gen_stub(override_type(
+            type_repr = "typing.Optional[gorder.Frequency]", imports=("typing")
+        ))]
+        frequency: Option<Frequency>,
+        #[gen_stub(override_type(
+            type_repr = "typing.Optional[typing.Union[builtins.bool, builtins.str]]", imports=("typing")
+        ))]
+        collect: Option<Bound<'a, PyAny>>,
+        flip: bool,
+    ) -> PyResult<Self> {
+        let classification = add_collect(
+            add_freq(
+                RsLeafletClassification::spherical_clustering(heads),
+                frequency,
+            )?,
+            collect,
+        )?;
+
+        Ok(Self(classification.with_flip(flip)))
+    }
+}
+
 /// Get leaflet assignment from an external YAML file or a dictionary.
 ///
 /// Parameters
@@ -481,7 +537,8 @@ fn add_collect<'a>(
             RsLeafletClassification::Global(_) |
             RsLeafletClassification::Local(_) |
             RsLeafletClassification::Individual(_) |
-            RsLeafletClassification::Clustering(_) => return Ok(classification.with_collect(Collect::extract_bound(&collect)?.0)),
+            RsLeafletClassification::Clustering(_) |
+            RsLeafletClassification::SphericalClustering(_) => return Ok(classification.with_collect(Collect::extract(collect.as_borrowed())?.0)),
             RsLeafletClassification::FromFile(_) |
             RsLeafletClassification::FromMap(_) |
             RsLeafletClassification::FromNdx(_) => return Err(ConfigError::new_err("collecting leaflet classification data for manual leaflet classification methods is not supported"))
@@ -494,7 +551,7 @@ fn add_collect<'a>(
 /// Converts a Python dictionary whose keys are strings and values are 2D numpy arrays
 /// into a hashbrown::HashMap<String, Vec<Vec<u8>>>.
 fn extract_map(py_obj: &Bound<'_, PyAny>) -> PyResult<HashMap<String, Vec<Vec<u8>>>> {
-    let dict = py_obj.downcast::<PyDict>().map_err(|_| {
+    let dict = py_obj.cast::<PyDict>().map_err(|_| {
         ConfigError::new_err(
             "expected a dictionary using molecule types as keys and 2D numpy arrays with shape (n_frames, n_molecules) as values",
         )
@@ -511,7 +568,7 @@ fn extract_map(py_obj: &Bound<'_, PyAny>) -> PyResult<HashMap<String, Vec<Vec<u8
 /// Converts a two-dimensional numpy array into a Vec<Vec<u8>>.
 fn extract_nested_vector(py_obj: &Bound<'_, PyAny>) -> PyResult<Vec<Vec<u8>>> {
     let array = py_obj
-        .downcast::<PyArray2<u8>>()
+        .cast::<PyArray2<u8>>()
         .map_err(|_| ConfigError::new_err("expected a 2D numpy array for leaflet assignment"))?;
 
     let array_view: ArrayView2<u8> = unsafe { array.as_array() };

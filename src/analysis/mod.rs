@@ -1,5 +1,5 @@
 // Released under MIT License.
-// Copyright (c) 2024-2025 Ladislav Bartos
+// Copyright (c) 2024-2026 Ladislav Bartos
 
 //! This module contains the implementation of the analysis logic.
 
@@ -21,6 +21,7 @@ pub(crate) mod normal;
 pub(crate) mod order;
 pub(crate) mod ordermap;
 pub(crate) mod pbc;
+mod spherical_clustering;
 mod spinner;
 mod structure;
 pub(crate) mod timewise;

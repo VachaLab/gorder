@@ -4,6 +4,7 @@
 import builtins
 import typing
 
+@typing.final
 class AAOrder:
     r"""
     Request the calculation of atomistic order parameters.
@@ -21,8 +22,9 @@ class AAOrder:
     - Order parameters are calculated for bonds between `heavy_atoms` and `hydrogens`. These bonds are detected automatically.
     - The order parameters for heavy atoms are determined by averaging the order parameters of the corresponding bonds.
     """
-    def __new__(cls, heavy_atoms:builtins.str, hydrogens:builtins.str) -> AAOrder: ...
+    def __new__(cls, heavy_atoms: builtins.str, hydrogens: builtins.str) -> AAOrder: ...
 
+@typing.final
 class CGOrder:
     r"""
     Request the calculation of coarse-grained order parameters.
@@ -37,8 +39,9 @@ class CGOrder:
     - Beads should be specified using the `groan selection language <https://ladme.github.io/gsl-guide>`_.
     - Order parameters are calculated for bonds between individual `beads`. These bonds are detected automatically.
     """
-    def __new__(cls, beads:builtins.str) -> CGOrder: ...
+    def __new__(cls, beads: builtins.str) -> CGOrder: ...
 
+@typing.final
 class UAOrder:
     r"""
     Request the calculation of united-atom order parameters.
@@ -62,5 +65,5 @@ class UAOrder:
       This means it will attempt to add one hydrogen to a carboxyl atom if specified.
       A simple solution to this issue is to exclude such atoms from the analysis.
     """
-    def __new__(cls, saturated:typing.Optional[builtins.str]=None, unsaturated:typing.Optional[builtins.str]=None, ignore:typing.Optional[builtins.str]=None) -> UAOrder: ...
+    def __new__(cls, saturated: typing.Optional[builtins.str] = None, unsaturated: typing.Optional[builtins.str] = None, ignore: typing.Optional[builtins.str] = None) -> UAOrder: ...
 

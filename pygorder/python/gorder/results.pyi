@@ -7,6 +7,7 @@ import numpy.typing
 import typing
 import gorder
 
+@typing.final
 class AnalysisResults:
     r"""
     Container for all results of an analysis.
@@ -41,7 +42,7 @@ class AnalysisResults:
         List[MoleculeResults]
             A list of results for each molecule type.
         """
-    def get_molecule(self, name:builtins.str) -> MoleculeResults:
+    def get_molecule(self, name: builtins.str) -> MoleculeResults:
         r"""
         Get results for a molecule type with the specified name.
         
@@ -108,6 +109,7 @@ class AnalysisResults:
         Collecting membrane normals is only supported when they are dynamically calculated.
         """
 
+@typing.final
 class AtomResults:
     r"""
     Results of the analysis for a single atom type.
@@ -142,7 +144,7 @@ class AtomResults:
         List[BondResults]
             Results for all bond types involving this atom type.
         """
-    def get_bond(self, relative_index:builtins.int) -> BondResults:
+    def get_bond(self, relative_index: builtins.int) -> BondResults:
         r"""
         Get the results for a bond types between this atom type and a hydrogen type (AA) or virtual hydrogen type (UA).
         
@@ -180,6 +182,7 @@ class AtomResults:
             Collection of order maps for this atom type.
         """
 
+@typing.final
 class BondResults:
     r"""
     Results of the analysis for a single bond type.
@@ -229,6 +232,7 @@ class BondResults:
             Collection of order maps for this bond type.
         """
 
+@typing.final
 class Convergence:
     r"""
     Stores information about the convergence of order parameter calculations
@@ -280,11 +284,12 @@ class Convergence:
             Cumulative averages for the lower leaflet, or `None` if not available.
         """
 
+@typing.final
 class LeafletsData:
     r"""
     Stores collected leaflet classification data.
     """
-    def get_molecule(self, molecule:builtins.str) -> typing.Optional[numpy.typing.NDArray[numpy.uint8]]:
+    def get_molecule(self, molecule: builtins.str) -> typing.Optional[numpy.typing.NDArray[numpy.uint8]]:
         r"""
         Get leaflet classification data for the specified molecule type.
         
@@ -320,6 +325,7 @@ class LeafletsData:
             Indices of the frames for which leaflet classification was performed.
         """
 
+@typing.final
 class Map:
     r"""
     Map of order parameters.
@@ -351,7 +357,7 @@ class Map:
         Tuple[float, float]
             Width and height of a single tile of the map.
         """
-    def get_at(self, x:builtins.float, y:builtins.float) -> typing.Optional[builtins.float]:
+    def get_at(self, x: builtins.float, y: builtins.float) -> typing.Optional[builtins.float]:
         r"""
         Get the order parameter at the specified coordinates.
         
@@ -380,6 +386,7 @@ class Map:
             - The third array (2D) contains the calculated order parameters.
         """
 
+@typing.final
 class MoleculeResults:
     r"""
     Results of the analysis for a single molecule type.
@@ -437,7 +444,7 @@ class MoleculeResults:
         List[BondResults]
             Per-bond type results.
         """
-    def get_atom(self, relative_index:builtins.int) -> AtomResults:
+    def get_atom(self, relative_index: builtins.int) -> AtomResults:
         r"""
         Get results for a heavy atom type with the specified relative index.
         
@@ -456,7 +463,7 @@ class MoleculeResults:
         APIError
             If the atom type does not exist or results are obtained for a coarse-grained system.
         """
-    def get_bond(self, relative_index_1:builtins.int, relative_index_2:builtins.int) -> BondResults:
+    def get_bond(self, relative_index_1: builtins.int, relative_index_2: builtins.int) -> BondResults:
         r"""
         Get results for a bond type involving atom types with the specified relative indices.
         
@@ -486,11 +493,12 @@ class MoleculeResults:
             Convergence data if available; otherwise `None`.
         """
 
+@typing.final
 class NormalsData:
     r"""
     Stores collected membrane normals.
     """
-    def get_molecule(self, molecule:builtins.str) -> typing.Optional[numpy.typing.NDArray[numpy.float32]]:
+    def get_molecule(self, molecule: builtins.str) -> typing.Optional[numpy.typing.NDArray[numpy.float32]]:
         r"""
         Get collected membrane normals for the specified molecule type.
         
@@ -527,6 +535,7 @@ class NormalsData:
             Indices of the analyzed frames.
         """
 
+@typing.final
 class Order:
     r"""
     Single order parameter value, optionally with its estimated error.
@@ -550,6 +559,7 @@ class Order:
             Estimated error of the order parameter, or `None` if not available.
         """
 
+@typing.final
 class OrderCollection:
     r"""
     Order parameters for a single object (atom type, bond type, molecule type, system)
@@ -583,6 +593,7 @@ class OrderCollection:
             Order parameter for the lower leaflet. Returns `None` if not available.
         """
 
+@typing.final
 class OrderMapsCollection:
     r"""
     Order maps for a single object (atom type, bond type, molecule type, system)
