@@ -1,6 +1,6 @@
 ## Version 1.3.0
 ### Faster leaflet assignment for vesicles
-- Implemented a new leaflet classification method, `SphericalClustering`, exclusively for vesicles. This method classifies lipids using a 2-component Gaussian Mixture Model based on the distances between lipid headgroups and the vesicle center of geometry. This method is **much** faster than `Clustering`, almost on a par with the `Individual` classification method, but is only usable for systems with a single unilamellar vesicle. See [the manual](https://ladme.github.io/gorder-manual/leaflets.html#spherical-clustering-method-for-leaflet-classification) for more details.
+- Implemented a new leaflet classification method, `SphericalClustering`, exclusively for vesicles. This method classifies lipids using a 2-component Gaussian Mixture Model based on the distances between lipid headgroups and the vesicle center of geometry. This method is **much** faster than `Clustering`, but is only usable for systems with a single unilamellar vesicle. See [the manual](https://ladme.github.io/gorder-manual/leaflets.html#spherical-clustering-method) for more details.
 
 ### Analyzing very long trajectories
 - Trajectories longer than 2 147 483 647 simulation steps can be now analyzed.

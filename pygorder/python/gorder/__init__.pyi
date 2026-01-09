@@ -5,6 +5,8 @@ import builtins
 import numpy
 import typing
 import gorder
+import gorder
+import gorder
 from . import analysis_types
 from . import estimate_error
 from . import geometry
@@ -12,6 +14,12 @@ from . import leaflets
 from . import membrane_normal
 from . import ordermap
 from . import results
+from . import exceptions
+
+__version__: str
+from . import exceptions
+
+__version__: str
 from . import exceptions
 
 __version__: str

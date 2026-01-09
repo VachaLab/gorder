@@ -6,6 +6,8 @@ import numpy
 import numpy.typing
 import typing
 import gorder
+import gorder
+import gorder
 
 @typing.final
 class AnalysisResults:
