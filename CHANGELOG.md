@@ -5,8 +5,6 @@
 ### Analyzing very long trajectories
 - Trajectories longer than 2 147 483 647 simulation steps can be now analyzed.
 
-***
-
 ## Version 1.2.0
 ### Exporting internal data
 - You can now collect and export information about which leaflets individual lipids were assigned to during the analysis, as well as dynamically calculated membrane normals, to external files. This is only performed when requested in the analysis setup. The data can also be accessed via the Rust and Python APIs. Read more in the corresponding sections of the manual: [Exporting lipid assignment data](https://ladme.github.io/gorder-manual/leaflets_export.html) and [Exporting membrane normals](https://ladme.github.io/gorder-manual/normals_export.html).
