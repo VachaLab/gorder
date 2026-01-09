@@ -37,7 +37,7 @@ Here are the benchmarking results for various leaflet classification methods usi
 | SphClustering   |    1    | 19.296 ± 0.022    |   119%     |
 | Clustering      |    1    | ~87               |   540%     |
 | FromFile        |    1    | 17.765 ± 0.014    |   110%     |
-|
+|                                                            |
 | No assignment   |    8    | 5.858 ± 0.023     |   100%     |
 | Global          |    8    | 9.855 ± 0.032     |   168%     |
 | Local           |    8    | ~508              |  8700%     |
