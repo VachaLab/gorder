@@ -10,7 +10,7 @@ uv project, run:
 
 .. code-block:: bash
 
-    uv add git+https://github.com/Ladme/gorder.git#subdirectory=pygorder
+    uv add git+https://github.com/VachaLab/gorder.git#subdirectory=pygorder
 
 Using pip
 +++++++++
@@ -19,7 +19,7 @@ If you don't use uv, you can also install ``gorder`` using pip:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/Ladme/gorder.git#subdirectory=pygorder
+    pip install git+https://github.com/VachaLab/gorder.git#subdirectory=pygorder
 
 Optional dependencies
 +++++++++++++++++++++
