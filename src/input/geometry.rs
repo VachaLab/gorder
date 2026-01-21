@@ -44,6 +44,7 @@ impl Geometry {
             xdim,
             ydim,
             zdim,
+            invert: false,
         });
 
         geometry.validate()?;
@@ -70,6 +71,7 @@ impl Geometry {
             radius,
             span,
             orientation,
+            invert: false,
         });
 
         geometry.validate()?;
@@ -89,10 +91,26 @@ impl Geometry {
         let geometry = Self::Sphere(SphereSelection {
             reference: reference.into(),
             radius,
+            invert: false,
         });
 
         geometry.validate()?;
         Ok(geometry)
+    }
+
+    /// Invert the geometry selection.
+    ///
+    /// If `invert` is true, only bonds which are OUTSIDE of
+    /// the specified geometry will be selected.
+    #[inline(always)]
+    pub fn with_invert(mut self, invert: bool) -> Self {
+        match &mut self {
+            Geometry::Cuboid(x) => x.invert = invert,
+            Geometry::Cylinder(x) => x.invert = invert,
+            Geometry::Sphere(x) => x.invert = invert,
+        }
+
+        self
     }
 
     /// Check that the geometry selection makes sense.
@@ -162,6 +180,10 @@ pub struct CuboidSelection {
     #[serde(default = "infinite_dim")]
     #[serde(alias = "z", alias = "dim_z")]
     zdim: [f32; 2],
+    /// Should the geometry selection will be inverted?
+    #[getset(get_copy = "pub")]
+    #[serde(default)]
+    invert: bool,
 }
 
 /// Represents a cylinder used to select bonds located within its bounds.
@@ -186,6 +208,10 @@ pub struct CylinderSelection {
     /// The spatial orientation of the cylinder, determining its alignment in 3D space.
     #[getset(get_copy = "pub")]
     orientation: Axis,
+    /// Should the geometry selection will be inverted?
+    #[getset(get_copy = "pub")]
+    #[serde(default)]
+    invert: bool,
 }
 
 fn infinite_dim() -> [f32; 2] {
@@ -206,6 +232,10 @@ pub struct SphereSelection {
     /// Radius of the sphere [in nm].
     #[getset(get_copy = "pub")]
     radius: f32,
+    /// Should the geometry selection will be inverted?
+    #[getset(get_copy = "pub")]
+    #[serde(default)]
+    invert: bool,
 }
 
 /// Coordinates of a point, a GSL selection query, or request to use box center.

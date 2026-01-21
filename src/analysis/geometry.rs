@@ -60,11 +60,16 @@ impl GeometrySelectionType {
             GeometrySelectionType::None(_) => (),
             GeometrySelectionType::Cuboid(cuboid) => {
                 colog_info!(
-                    "Will only consider bonds located inside a {}:
+                    "Will only consider bonds located {} a {}:
   x-dimension: from {} nm to {} nm
   y-dimension: from {} nm to {} nm
   z-dimension: from {} nm to {} nm
   relative to {}",
+                    if cuboid.properties.invert() {
+                        "outside"
+                    } else {
+                        "inside"
+                    },
                     "cuboid",
                     cuboid.properties.xdim()[0],
                     cuboid.properties.xdim()[1],
@@ -77,11 +82,16 @@ impl GeometrySelectionType {
             }
             GeometrySelectionType::Cylinder(cylinder) => {
                 colog_info!(
-                    "Will only consider bonds located inside a {}:
+                    "Will only consider bonds located {} a {}:
   radius: {} nm
   oriented along the {} axis 
   going from {} nm to {} nm along the {} axis
   relative to {}",
+                    if cylinder.properties.invert() {
+                        "outside"
+                    } else {
+                        "inside"
+                    },
                     "cylinder",
                     cylinder.properties.radius(),
                     cylinder.properties.orientation(),
@@ -93,9 +103,14 @@ impl GeometrySelectionType {
             }
             GeometrySelectionType::Sphere(sphere) => {
                 colog_info!(
-                    "Will only consider bonds located inside a {}:
+                    "Will only consider bonds located {} a {}:
   radius: {} nm
   center: {}",
+                    if sphere.properties.invert() {
+                        "outside"
+                    } else {
+                        "inside"
+                    },
                     "sphere",
                     sphere.properties.radius(),
                     sphere.properties.reference()
@@ -140,6 +155,9 @@ pub(crate) trait GeometrySelection: Send + Sync {
     /// Set the inner shape of the geometry selection.
     fn set_shape(&mut self, shape: Self::Shape);
 
+    /// Should the geometry selection be inverted?
+    fn invert(&self) -> bool;
+
     /// Construct the inner shape of the geometry selection with the given point being used as reference.
     fn construct_shape<'a>(
         properties: &Self::Properties,
@@ -161,13 +179,13 @@ pub(crate) trait GeometrySelection: Send + Sync {
     /// Is the point inside the geometry? Take PBC into consideration.
     #[inline(always)]
     fn inside(&self, point: &Vector3D, simbox: &SimBox) -> bool {
-        self.shape().inside(point, simbox)
+        self.shape().inside(point, simbox) ^ self.invert()
     }
 
     /// Is the point inside the geometry? Ignore PBC.
     #[inline(always)]
     fn inside_naive(&self, point: &Vector3D) -> bool {
-        self.shape().inside_naive(point)
+        self.shape().inside_naive(point) ^ self.invert()
     }
 
     /// Calculate and set the reference position for this frame.
@@ -231,6 +249,11 @@ impl GeometrySelection for NoSelection {
 
     #[inline(always)]
     fn set_shape(&mut self, _shape: Self::Shape) {}
+
+    #[inline(always)]
+    fn invert(&self) -> bool {
+        false
+    }
 
     #[inline(always)]
     fn construct_shape<'a>(
@@ -337,6 +360,11 @@ impl GeometrySelection for CuboidAnalysis {
     fn set_shape(&mut self, shape: Self::Shape) {
         self.shape = shape;
     }
+
+    #[inline(always)]
+    fn invert(&self) -> bool {
+        self.properties.invert()
+    }
 }
 
 /// Cylindrical geometry selection.
@@ -379,6 +407,11 @@ impl GeometrySelection for CylinderAnalysis {
     #[inline(always)]
     fn set_shape(&mut self, shape: Self::Shape) {
         self.shape = shape;
+    }
+
+    #[inline(always)]
+    fn invert(&self) -> bool {
+        self.properties.invert()
     }
 
     #[inline(always)]
@@ -458,6 +491,11 @@ impl GeometrySelection for SphereAnalysis {
     #[inline(always)]
     fn set_shape(&mut self, shape: Self::Shape) {
         self.shape = shape;
+    }
+
+    #[inline(always)]
+    fn invert(&self) -> bool {
+        self.properties.invert()
     }
 
     #[inline(always)]
