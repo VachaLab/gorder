@@ -1,20 +1,28 @@
+## Version 1.4.0
+### Inverting geometric selections
+- Geometry selections can be now inverted using the `invert` keyword. See [the manual](https://vachalab.github.io/gorder-manual/geometry.html#inverting-the-selection) for more details.
+
+### Other changes
+- A companion package `guiorder` providing graphical user interface for `gorder` has been released.
+- `gorder` along with its documentation has been transferred to [Vacha Lab organization](https://github.com/VachaLab).
+
 ## Version 1.3.0
 ### Faster leaflet assignment for vesicles
-- Implemented a new leaflet classification method, `SphericalClustering`, exclusively for vesicles. This method classifies lipids using a 2-component Gaussian Mixture Model based on the distances between lipid headgroups and the vesicle center of geometry. This method is **much** faster than `Clustering`, but is only usable for systems with a single unilamellar vesicle. See [the manual](https://ladme.github.io/gorder-manual/leaflets.html#spherical-clustering-method) for more details.
+- Implemented a new leaflet classification method, `SphericalClustering`, exclusively for vesicles. This method classifies lipids using a 2-component Gaussian Mixture Model based on the distances between lipid headgroups and the vesicle center of geometry. This method is **much** faster than `Clustering`, but is only usable for systems with a single unilamellar vesicle. See [the manual](https://vachalab.github.io/gorder-manual/leaflets.html#spherical-clustering-method) for more details.
 
 ### Analyzing very long trajectories
 - Trajectories longer than 2 147 483 647 simulation steps can be now analyzed.
 
 ## Version 1.2.0
 ### Exporting internal data
-- You can now collect and export information about which leaflets individual lipids were assigned to during the analysis, as well as dynamically calculated membrane normals, to external files. This is only performed when requested in the analysis setup. The data can also be accessed via the Rust and Python APIs. Read more in the corresponding sections of the manual: [Exporting lipid assignment data](https://ladme.github.io/gorder-manual/leaflets_export.html) and [Exporting membrane normals](https://ladme.github.io/gorder-manual/normals_export.html).
+- You can now collect and export information about which leaflets individual lipids were assigned to during the analysis, as well as dynamically calculated membrane normals, to external files. This is only performed when requested in the analysis setup. The data can also be accessed via the Rust and Python APIs. Read more in the corresponding sections of the manual: [Exporting lipid assignment data](https://vachalab.github.io/gorder-manual/leaflets_export.html) and [Exporting membrane normals](https://vachalab.github.io/gorder-manual/normals_export.html).
 
 ### Flipping the assignment
-- When assigning lipids to leaflets, you can use the `flip` keyword, which reverses the assignment—upper leaflet becomes lower leaflet and vice versa. This may seem useless, but it can help with leaflet assignment when using the clustering method. See [the manual](https://ladme.github.io/gorder-manual/leaflets.html#flipping-the-assignment) for more details.
+- When assigning lipids to leaflets, you can use the `flip` keyword, which reverses the assignment—upper leaflet becomes lower leaflet and vice versa. This may seem useless, but it can help with leaflet assignment when using the clustering method. See [the manual](https://vachalab.github.io/gorder-manual/leaflets.html#flipping-the-assignment) for more details.
 
 ### Python API
 - The Python `gorder` library now exposes type information and supports autocomplete.
-- [Documentation of the Python API](https://ladme.github.io/pygorder-docs/) has been improved and should be much more complete.
+- [Documentation of the Python API](https://vachalab.github.io/pygorder-docs/) has been improved and should be much more complete.
 
 ### Bug fixes
 - Manually assigning membrane normals previously returned an error unless the analysis step was set to 1. This has been fixed, and manual membrane normals can now be used with any analysis step.
@@ -23,7 +31,7 @@
 - Changed the wording of some error messages and adjusted the formatting of certain output written to stdout.
 
 ## Version 1.1.0
-- The `@membrane` macro now matches a wider variety of lipid types. See the [GSL guide](https://ladme.github.io/gsl-guide/autodetection.html) for details on how the macro currently expands.
+- The `@membrane` macro now matches a wider variety of lipid types. See the [GSL guide](https://vachalab.github.io/gsl-guide/autodetection.html) for details on how the macro currently expands.
   - This change makes selecting lipid molecules that form your membrane simpler and more reliable, especially when working with less common lipid types.
   - The macro still cannot guarantee identification of all lipid molecules, so exercise caution when using it.
   - **Since the `@membrane` macro now matches more lipid types, some queries using this macro may return different atom selections. Therefore, `gorder` v1.1.0 is not guaranteed to return the same results as `gorder` v1.0.0 or previous versions.**
@@ -41,26 +49,26 @@
 - Fixed undefined behavior in the `groan_rs` library's C source code that caused TRR files to be read incorrectly when compiled with certain C compilers (e.g., clang).
 
 ## Version 0.7.0
-- **Leaflet classification for curved membranes:** `gorder` can now use spectral clustering to classify lipids into leaflets for any membrane geometry, including buckled membranes and vesicles. See the [manual](https://ladme.github.io/gorder-manual/leaflets.html#clustering-method-for-leaflet-classification) for more information.
+- **Leaflet classification for curved membranes:** `gorder` can now use spectral clustering to classify lipids into leaflets for any membrane geometry, including buckled membranes and vesicles. See the [manual](https://vachalab.github.io/gorder-manual/leaflets.html#clustering-method-for-leaflet-classification) for more information.
 - **!!BREAKING CHANGE!!** **Removed support for some trajectory formats:** Removed support for PDB, Amber NetCDF, DCD, and LAMMPSTRJ trajectories. (PDB structure files are still supported.) The parsing of these trajectories relied on the `chemfiles` library, whose maintenance standards and capabilities just do not meet the quality requirements for `gorder`. If you need to use these trajectory formats, you can still use `gorder v0.6`.
 
 ***
 
 ## Version 0.6.0
-- **United-atom order parameters:** `gorder` is now able to calculate order parameters in united-atom systems. See the [manual](https://ladme.github.io/gorder-manual/uaorder_basics.html) for more information.
-- **Python API:** `gorder` is now available as a Python package. See the [manual](https://ladme.github.io/gorder-manual/python_api.html) for more information.
-- **Trajectory concatenation:** You can now provide multiple trajectory files which will be all joined into one trajectory and analyzed. In case there are duplicate frames at trajectory boundaries, `gorder` will analyze only one of the duplicate frames. This feature is currently only supported for XTC and TRR files. See the [manual](https://ladme.github.io/gorder-manual/multiple_trajectories.html) for more information.
-- **Manual membrane normals:** Membrane normals can be now assigned manually for each lipid molecule in each trajectory frame. See the [manual](https://ladme.github.io/gorder-manual/manual_normals.html) for more information.
+- **United-atom order parameters:** `gorder` is now able to calculate order parameters in united-atom systems. See the [manual](https://vachalab.github.io/gorder-manual/uaorder_basics.html) for more information.
+- **Python API:** `gorder` is now available as a Python package. See the [manual](https://vachalab.github.io/gorder-manual/python_api.html) for more information.
+- **Trajectory concatenation:** You can now provide multiple trajectory files which will be all joined into one trajectory and analyzed. In case there are duplicate frames at trajectory boundaries, `gorder` will analyze only one of the duplicate frames. This feature is currently only supported for XTC and TRR files. See the [manual](https://vachalab.github.io/gorder-manual/multiple_trajectories.html) for more information.
+- **Manual membrane normals:** Membrane normals can be now assigned manually for each lipid molecule in each trajectory frame. See the [manual](https://vachalab.github.io/gorder-manual/manual_normals.html) for more information.
 - **Optimizations:** Local leaflet classification method and dynamic local membrane normal calculation are now much faster, especially for very large systems, through using cell lists. **Warning:** The changes may cause small differences in the calculated order parameters compared to version 0.5, especially for very short trajectories. These differences should be on the order of 0.0001 arb. u. or lower.
 
 ***
 
 ## Version 0.5.0
-- **Dynamic membrane normal calculation:** Membrane normals can be now calculated dynamically from actual membrane shape which allows the calculation of order parameters for vesicles and similar systems (see the [manual](https://ladme.github.io/gorder-manual/membrane_normal.html)).
-- **Ignoring PBC:** You can now choose to ignore periodic boundary conditions. This allows analyzing simulations with non-orthogonal simulation boxes with some small additional friction (making molecules whole). See the [manual](https://ladme.github.io/gorder-manual/no_pbc.html) for more information.
-- **Reworked manual lipid assignment:** It is now possible to classify lipids into membrane leaflets using NDX files, enabling integration of `gorder` with `FATSLiM`. **BREAKING CHANGE** The keywords to request manual leaflet assignment using a leaflet assignment file have been changed, see the [manual](https://ladme.github.io/gorder-manual/manual_leaflets.html#assigning-lipids-using-a-leaflet-assignment-file) for more information.
+- **Dynamic membrane normal calculation:** Membrane normals can be now calculated dynamically from actual membrane shape which allows the calculation of order parameters for vesicles and similar systems (see the [manual](https://vachalab.github.io/gorder-manual/membrane_normal.html)).
+- **Ignoring PBC:** You can now choose to ignore periodic boundary conditions. This allows analyzing simulations with non-orthogonal simulation boxes with some small additional friction (making molecules whole). See the [manual](https://vachalab.github.io/gorder-manual/no_pbc.html) for more information.
+- **Reworked manual lipid assignment:** It is now possible to classify lipids into membrane leaflets using NDX files, enabling integration of `gorder` with `FATSLiM`. **BREAKING CHANGE** The keywords to request manual leaflet assignment using a leaflet assignment file have been changed, see the [manual](https://vachalab.github.io/gorder-manual/manual_leaflets.html#assigning-lipids-using-a-leaflet-assignment-file) for more information.
 - **Ordermaps visualization:** A python script is now generated inside any created `ordermaps` directory which can be used to easily plot the ordermaps. Changed the default range of the colorbar in ordermaps to more reasonable values.
-- **More trajectory formats:** Added **experimental** support for more trajectory formats, namely TRR, GRO, PDB, Amber NetCDF, DCD, and LAMMPSTRJ. Always prefer using XTC trajectory as `gorder` is optimized to read it very fast. There are also some limitations connected with using different trajectory formats, see the [manual](https://ladme.github.io/gorder-manual/other_input.html#trajectory-file-formats).
+- **More trajectory formats:** Added **experimental** support for more trajectory formats, namely TRR, GRO, PDB, Amber NetCDF, DCD, and LAMMPSTRJ. Always prefer using XTC trajectory as `gorder` is optimized to read it very fast. There are also some limitations connected with using different trajectory formats, see the [manual](https://vachalab.github.io/gorder-manual/other_input.html#trajectory-file-formats).
 - **Bug fixes and other changes:**
   - `gorder` now returns an error if the center of geometry calculation for leaflet classification is nonsensical (i.e., `nan`).
   - If molecule classification runs longer than expected, progress is logged. By default, progress output begins after 500 ms, but you can adjust this delay using the environment variable `GORDER_MOLECULE_CLASSIFICATION_TIME_LIMIT`.
