@@ -234,6 +234,28 @@ fn test_bin_cg_geometry_selection() {
 }
 
 #[test]
+fn test_bin_aa_inverted_cuboid_selection() {
+    Command::cargo_bin("gorder")
+        .unwrap()
+        .args([
+            "tests/files/inputs/inverted_cuboid.yaml",
+            "--silent",
+            "--overwrite",
+        ])
+        .assert()
+        .success()
+        .stdout("");
+
+    assert_eq_order(
+        "temp_aa_order_inverted_cuboid.yaml",
+        "tests/files/aa_order_cuboid_square_inverted.yaml",
+        1,
+    );
+
+    std::fs::remove_file("temp_aa_order_inverted_cuboid.yaml").unwrap();
+}
+
+#[test]
 fn test_bin_aa_leaflets_every_export() {
     Command::cargo_bin("gorder")
         .unwrap()

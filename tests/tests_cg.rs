@@ -2679,6 +2679,43 @@ fn test_cg_order_geometry_cylinder_z() {
 }
 
 #[test]
+fn test_cg_order_geometry_cylinder_z_inverted_multiple_threads() {
+    for n_threads in [1, 3, 8, 16] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/cg.tpr")
+            .trajectory("tests/files/cg.xtc")
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .output_yaml(path_to_output)
+            .geometry(
+                Geometry::cylinder(
+                    Vector3D::new(3.0, 3.0, 3.0),
+                    4.0,
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                    Axis::Z,
+                )
+                .unwrap()
+                .with_invert(true),
+            )
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/cg_order_cylinder_z_inverted.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
 fn test_cg_order_leaflets_from_file_once_multiple_threads() {
     for n_threads in [1, 2, 5, 8, 16, 32] {
         let output = NamedTempFile::new().unwrap();
