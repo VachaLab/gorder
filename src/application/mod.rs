@@ -20,7 +20,7 @@ use std::io::Write;
     author,
     version,
     about,
-    long_about = "Calculate order parameters for any atomistic, united-atom, or coarse grained system."
+    long_about = "Calculate order parameters for any atomistic, united-atom, or coarse-grained system."
 )]
 pub struct Args {
     #[arg(
