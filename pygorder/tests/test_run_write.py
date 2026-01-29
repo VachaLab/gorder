@@ -930,6 +930,86 @@ def test_geometry_sphere():
         shutil.rmtree(temp_file_path, ignore_errors=True)
 
 
+def test_geometry_cylinder_inverted():
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    analysis = gorder.Analysis(
+        structure="../tests/files/cg.tpr",
+        trajectory="../tests/files/cg.xtc",
+        analysis_type=gorder.analysis_types.CGOrder("@membrane"),
+        geometry=gorder.geometry.Cylinder(
+            reference=[3, 3, 3], radius=4.0, orientation="z", invert=True
+        ),
+        output_yaml=temp_file_path,
+        silent=True,
+        overwrite=True,
+    )
+
+    analysis.run().write()
+
+    try:
+        assert diff_files_ignore_first(
+            temp_file_path, "../tests/files/cg_order_cylinder_z_inverted.yaml", 1
+        ), "Files do not match!"
+    finally:
+        shutil.rmtree(temp_file_path, ignore_errors=True)
+
+
+def test_geometry_cuboid_inverted():
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    analysis = gorder.Analysis(
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "element name hydrogen"
+        ),
+        geometry=gorder.geometry.Cuboid(
+            reference=[8, 2, 0], xdim=[-2, 4], ydim=[-4, 1], invert=True
+        ),
+        output_yaml=temp_file_path,
+        silent=True,
+        overwrite=True,
+    )
+
+    analysis.run().write()
+
+    try:
+        assert diff_files_ignore_first(
+            temp_file_path, "../tests/files/aa_order_cuboid_square_inverted.yaml", 1
+        ), "Files do not match!"
+    finally:
+        shutil.rmtree(temp_file_path, ignore_errors=True)
+
+
+def test_geometry_sphere_inverted():
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    analysis = gorder.Analysis(
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "element name hydrogen"
+        ),
+        geometry=gorder.geometry.Sphere(reference="resid 1", radius=2.5, invert=True),
+        output_yaml=temp_file_path,
+        silent=True,
+        overwrite=True,
+    )
+
+    analysis.run().write()
+
+    try:
+        assert diff_files_ignore_first(
+            temp_file_path, "../tests/files/aa_order_sphere_dynamic_inverted.yaml", 1
+        ), "Files do not match!"
+    finally:
+        shutil.rmtree(temp_file_path, ignore_errors=True)
+
+
 def test_ignore_pbc():
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file_path = temp_file.name
@@ -1157,7 +1237,7 @@ def test_dynamic_normals_export():
             temp_file_path, "../tests/files/cg_order_vesicle.yaml", 1
         ), "Order files do not match!"
         assert diff_files_ignore_first(
-            temp_file_normals_path, f"../tests/files/normals_vesicle.yaml", 1
+            temp_file_normals_path, "../tests/files/normals_vesicle.yaml", 1
         ), "Normals files do not match!"
     finally:
         shutil.rmtree(temp_file_path, ignore_errors=True)
