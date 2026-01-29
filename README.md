@@ -3,8 +3,10 @@
 
 Command line tool for calculating lipid order parameters from Gromacs simulations. 
 
+See also the [GUI version](https://github.com/VachaLab/guiorder) of `gorder`.
+
 ## Quick links
-- [The manual](https://ladme.github.io/gorder-manual/) describing how to use `gorder`.
+- [The manual](https://vachalab.github.io/gorder-manual/) describing how to use `gorder`.
 
 - [The article](https://doi.org/10.1016/j.softx.2025.102254) describing how `gorder` works.
 
@@ -30,6 +32,8 @@ analysis_type: !AAOrder
 output: order.yaml
 ```
 
+> *You can also specify the analysis parameters via a graphical user interface provided by [GUIorder](https://github.com/VachaLab/guiorder)!*
+
 2) Run the `gorder` tool. The program will automatically find bonds between the selected atoms, classify lipid molecules, and calculate order parameters for them.
 
 ```
@@ -38,49 +42,52 @@ $ gorder YOUR_INPUT_YAML_FILE
 
 3) See the results of the analysis in `order.yaml`.
 
-**See the [gorder manual](https://ladme.github.io/gorder-manual/) for more information about using this program.**
+**See the [gorder manual](https://vachalab.github.io/gorder-manual/) for more information about using this program.**
 
 ## Features
-- ⚛️ **[Atomistic](https://ladme.github.io/gorder-manual/aaorder_basics.html), [coarse-grained](https://ladme.github.io/gorder-manual/cgorder_basics.html), and [united-atom](https://ladme.github.io/gorder-manual/uaorder_basics.html) systems**   
+- ⚛️ **[Atomistic](https://vachalab.github.io/gorder-manual/aaorder_basics.html), [coarse-grained](https://vachalab.github.io/gorder-manual/cgorder_basics.html), and [united-atom](https://vachalab.github.io/gorder-manual/uaorder_basics.html) systems**   
 Calculates order parameters for individual bonds of individual lipid types in atomistic, coarse-grained, and united-atom systems.
 
-- 🔠 [**Powerful selection language**](https://ladme.github.io/gsl-guide/)  
+- 🔠 [**Powerful selection language**](https://vachalab.github.io/gsl-guide/)  
 Allows for simple yet powerful atom selection using a VMD-like selection language, supporting regular expressions and groups from NDX files.
 
 - 🔍 **Automatic identification of molecule types**  
 Automatically recognizes bonds and classifies molecule types based on their topology. Order parameters are calculated and reported separately for each molecule type.
 
-- 📋 [**Various output formats**](https://ladme.github.io/gorder-manual/output.html)  
+- 📋 [**Various output formats**](https://vachalab.github.io/gorder-manual/output.html)  
 Outputs results in YAML, XVG, CSV, and custom "table" format.
 
 - 🏗️ **Any model and force-field**  
 Is completely force-field agnostic. Martini? CHARMM? Slipids? Berger lipids? Your own toy force-field? As long as your lipids have bonds, it will work.
 
-- 🍃 [**Leaflet-wise analysis**](https://ladme.github.io/gorder-manual/leaflets.html)  
+- 🍃 [**Leaflet-wise analysis**](https://vachalab.github.io/gorder-manual/leaflets.html)  
 Performs scrambling-safe assignment of lipids to membrane leaflets using one of five different methods, and then calculates lipid order parameters for individual leaflets.
 
-- 🟠 [**Order parameters for vesicles**](https://ladme.github.io/gorder-manual/membrane_normal.html)  
+- 🟠 [**Order parameters for vesicles**](https://vachalab.github.io/gorder-manual/membrane_normal.html)  
 Dynamically calculates membrane normals based on the membrane's shape, enabling the calculation of order parameters for highly curved systems such as micelles, tubes, and vesicles.
 
-- 🗺️ [**Order parameter maps**](https://ladme.github.io/gorder-manual/ordermaps.html)  
+- 🗺️ [**Order parameter maps**](https://vachalab.github.io/gorder-manual/ordermaps.html)  
 Constructs 2D projections of order parameters, so you know what parts of the membrane are ordered and disordered.
 
-- 📉 [**Error estimation**](https://ladme.github.io/gorder-manual/errors.html)  
+- 📉 [**Error estimation**](https://vachalab.github.io/gorder-manual/errors.html)  
 Automatically estimates the error of the analysis and indicates how well your analysis has converged.
 
-- 🌍 [**Analysis of specific membrane regions**](https://ladme.github.io/gorder-manual/geometry.html)  
+- 🌍 [**Analysis of specific membrane regions**](https://vachalab.github.io/gorder-manual/geometry.html)  
 Dynamically selects lipids in a specified part of the membrane and calculates order parameters only for them.
 
-- 🔗 [**Trajectory concatenation**](https://ladme.github.io/gorder-manual/multiple_trajectories.html)  
+- 🔗 [**Trajectory concatenation**](https://vachalab.github.io/gorder-manual/multiple_trajectories.html)  
 Seamlessly concatenates multiple XTC trajectories during the analysis, in most cases eliminating the need for data preprocessing.
 
 - ⚡ [**Extremely fast**](#benchmarking)  
 Is extremely fast due to its ability to read only the necessary atoms from XTC files and its support for multithreading.
 
-- 👨‍💻 **[Python](https://ladme.github.io/gorder-manual/python_api.html) and [Rust](https://ladme.github.io/gorder-manual/rust_api.html) API**  
+- 🎨 [**Graphical user interface**](https://vachalab.github.io/gorder-manual/guiorder.html)   
+Has a companion tool [GUIorder](https://github.com/VachaLab/guiorder) that simplifies specifying analysis parameters via a graphical user interface.
+
+- 👨‍💻 **[Python](https://vachalab.github.io/gorder-manual/python_api.html) and [Rust](https://vachalab.github.io/gorder-manual/rust_api.html) API**  
 Is also available as a Python package and a Rust crate, allowing seamless integration with Python and/or Rust code.
 
-- 📖 [**Extensive manual**](https://ladme.github.io/gorder-manual/introduction.html)  
+- 📖 [**Extensive manual**](https://vachalab.github.io/gorder-manual/introduction.html)  
 Includes a comprehensive manual detailing how to use the program, along with its strengths and limitations.
 
 ## Validation
@@ -143,12 +150,12 @@ Run times of the analyses performed in the Validation section by various tools:
 <sup>*</sup> Note that `g_lomepro` and `gmx order` require the analysis to be run twice to obtain full order parameters for both chains. The reported times are for both runs. Even if you only want to calculate lipid order parameters for a single (saturated) chain, `gmx order` is still slightly slower than `gorder` run using a single thread (4.75 seconds vs 4.09 seconds).
 
 ## Python and Rust API
-`gorder` is also available as a Python package and a Rust crate. For more information, see the [gorder manual](https://ladme.github.io/gorder-manual/), the [Python API documentation](https://ladme.github.io/pygorder-docs), or the [Rust API documentation](https://docs.rs/gorder/latest/gorder).
+`gorder` is also available as a Python package and a Rust crate. For more information, see the [gorder manual](https://vachalab.github.io/gorder-manual/), the [Python API documentation](https://vachalab.github.io/pygorder-docs), or the [Rust API documentation](https://docs.rs/gorder/latest/gorder).
 
 ## License
 The command line tool, the Python package, and the Rust crate are all released under the MIT License.
 
 ## Limitations
-- `gorder` does not fully support simulation boxes that are **not** orthogonal. [You can still use them but it requires some additional effort.](https://ladme.github.io/gorder-manual/no_pbc.html)
-- `gorder` does not support TPR files generated with Gromacs older than version 5.1. [But you can use PDB, GRO, or PQR file instead.](https://ladme.github.io/gorder-manual/other_structure.html)
+- `gorder` does not fully support simulation boxes that are **not** orthogonal. [You can still use them but it requires some additional effort.](https://vachalab.github.io/gorder-manual/no_pbc.html)
+- `gorder` does not support TPR files generated with Gromacs older than version 5.1. [But you can use PDB, GRO, or PQR file instead.](https://vachalab.github.io/gorder-manual/other_structure.html)
 - `gorder` reports order parameters for atoms (bonds) in the order in which they appear in the provided structure file. This is not necessarily the same order as in the acyl chains.

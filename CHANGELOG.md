@@ -3,7 +3,7 @@
 - Geometry selections can be now inverted using the `invert` keyword. See [the manual](https://vachalab.github.io/gorder-manual/geometry.html#inverting-the-selection) for more details.
 
 ### Other changes
-- A companion package `guiorder` providing graphical user interface for `gorder` has been released.
+- A companion tool [GUIorder](https://github.com/VachaLab/guiorder) providing graphical user interface for `gorder` has been released. See [the manual](https://vachalab.github.io/gorder-manual/guiorder.html) for more details.
 - `gorder` along with its documentation has been transferred to [Vacha Lab organization](https://github.com/VachaLab).
 
 ## Version 1.3.0
