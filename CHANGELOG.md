@@ -1,3 +1,7 @@
+## Version 1.4.1
+### Bug fixes
+- Fixed a bug where the `collect`/`export` keyword would not be parsed correctly if its value was `false`.
+
 ## Version 1.4.0
 ### Inverting geometric selections
 - Geometry selections can be now inverted using the `invert` keyword. See [the manual](https://vachalab.github.io/gorder-manual/geometry.html#inverting-the-selection) for more details.

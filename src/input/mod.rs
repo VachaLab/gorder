@@ -12,6 +12,8 @@ pub mod leaflets;
 pub mod membrane_normal;
 pub mod ordermap;
 
+use std::fmt;
+
 pub use analysis::{Analysis, AnalysisType};
 pub use axis::Axis;
 pub use estimate_error::EstimateError;
@@ -20,7 +22,10 @@ pub use geometry::{GeomReference, Geometry};
 pub use leaflets::LeafletClassification;
 pub use membrane_normal::{DynamicNormal, MembraneNormal};
 pub use ordermap::{GridSpan, OrderMap, Plane};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
 
 /// Helper struct specifying whether some data should be collected or not
 /// and where they should be exported to.
@@ -54,7 +59,67 @@ impl<'de> Deserialize<'de> for Collect {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        Ok(Collect::File(s))
+        struct CollectVisitor;
+
+        impl<'de> Visitor<'de> for CollectVisitor {
+            type Value = Collect;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("a boolean or a string")
+            }
+
+            fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Collect::Boolean(v))
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Collect::File(v.to_owned()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Collect::File(v))
+            }
+        }
+
+        deserializer.deserialize_any(CollectVisitor)
+    }
+}
+
+#[cfg(test)]
+mod tests_collect {
+    use super::*;
+    use serde_yaml;
+
+    #[derive(Debug, PartialEq, Deserialize)]
+    struct TestStruct {
+        collect: Collect,
+    }
+
+    #[test]
+    fn test_collect_deserialize() {
+        let yaml = "collect: false";
+        let test: TestStruct = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(test.collect, Collect::Boolean(false));
+
+        let yaml = "collect: true";
+        let test: TestStruct = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(test.collect, Collect::Boolean(true));
+
+        let yaml = "collect: \"path/to/file\"";
+        let test: TestStruct = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(test.collect, Collect::File("path/to/file".to_owned()));
+
+        let yaml = "collect: file";
+        let test: TestStruct = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(test.collect, Collect::File("file".to_owned()));
     }
 }
