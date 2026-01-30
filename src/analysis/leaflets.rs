@@ -1542,10 +1542,10 @@ impl SharedAssignedLeaflets {
             if start_time.elapsed() > *TIMEOUT {
                 if !warning_logged {
                     colog_warn!("DEADLOCKED? Thread has been waiting for shared leaflet assignment data (frame '{}') for more than {} seconds.
-This may be due to extreme system size, resource contention or a bug. Ensure that your CPU is not oversubscribed and that you have not lost access to the trajectory file.
+This may be due to extreme system size, resource contention, or a bug. Ensure that your CPU is not oversubscribed and that you have not lost access to the trajectory file.
 If `gorder` is causing oversubscription, reduce the number of threads used for the analysis.
 If other computationally intensive software is running alongside `gorder`, consider terminating it.
-If the issue persists, please report it by opening an issue at `github.com/Ladme/gorder/issues` or sending an email to `ladmeb@gmail.com`. 
+If the issue persists, please report it by opening an issue at `github.com/VachaLab/gorder/issues` or sending an email to `ladmeb@gmail.com`. 
 (Note: If no progress is made, this thread will terminate in {} seconds to prevent resource exhaustion.)",
                     frame,
                     TIMEOUT_SECONDS,

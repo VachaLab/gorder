@@ -6,8 +6,10 @@
 - If you change the core `gorder` code or anything inside `src`: `uv run --reinstall pytest`
 
 ### Creating pyi files
+
 - Activate a conda environment.
 - Run `./make_types.sh`.
+(If libpython cannot be found, run `export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH`)
 
 ### Generating documentation
 

@@ -5,8 +5,6 @@ import builtins
 import numpy
 import typing
 import gorder
-import gorder
-import gorder
 
 @typing.final
 class ClusteringClassification:

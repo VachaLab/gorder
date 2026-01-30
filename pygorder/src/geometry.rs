@@ -50,6 +50,8 @@ impl<'source> FromPyObject<'source, '_> for Geometry {
 ///     Span of the cuboid along the z-axis [nm]. Defaults to infinite if not specified.
 /// reference : Optional[Union[Sequence[float],str]]
 ///     Reference point for the cuboid position. Defaults to [0.0, 0.0, 0.0].
+/// invert : Optional[bool]
+///     Should the geometry selection be inverted? Defaults to False.
 ///
 /// Raises
 /// ------
@@ -68,7 +70,8 @@ impl Cuboid {
         xdim = [f32::NEG_INFINITY, f32::INFINITY],
         ydim = [f32::NEG_INFINITY, f32::INFINITY],
         zdim = [f32::NEG_INFINITY, f32::INFINITY],
-        reference = None))]
+        reference = None,
+        invert = false))]
     pub fn new(
         xdim: [f32; 2],
         ydim: [f32; 2],
@@ -77,6 +80,7 @@ impl Cuboid {
             type_repr = "typing.Union[typing.Sequence[builtins.float], builtins.str, None]", imports = ("typing")
         ))]
         reference: Option<Bound<'_, PyAny>>,
+        invert: bool,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
             GeomReference::extract(reference.as_borrowed())?
@@ -86,7 +90,8 @@ impl Cuboid {
 
         Ok(Self(
             RsGeometry::cuboid(converted_ref.0, xdim, ydim, zdim)
-                .map_err(|e| ConfigError::new_err(e.to_string()))?,
+                .map_err(|e| ConfigError::new_err(e.to_string()))?
+                .with_invert(invert),
         ))
     }
 }
@@ -103,6 +108,8 @@ impl Cuboid {
 ///     Span along the main axis [nm]. Defaults to infinite if not specified.
 /// reference : Optional[Union[Sequence[float],str]]
 ///     Reference point for position and size. Defaults to [0.0, 0.0, 0.0].
+/// invert : Optional[bool]
+///     Should the geometry selection be inverted? Defaults to False.
 ///
 /// Raises
 /// ------
@@ -121,7 +128,8 @@ impl Cylinder {
         radius,
         orientation,
         span = [f32::NEG_INFINITY, f32::INFINITY],
-        reference = None))]
+        reference = None,
+        invert = false))]
     pub fn new<'a>(
         radius: f32,
         orientation: &str,
@@ -130,6 +138,7 @@ impl Cylinder {
             type_repr = "typing.Union[typing.Sequence[builtins.float], builtins.str, None]", imports = ("typing")
         ))]
         reference: Option<Bound<'a, PyAny>>,
+        invert: bool,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
             GeomReference::extract(reference.as_borrowed())?
@@ -139,7 +148,8 @@ impl Cylinder {
 
         Ok(Self(
             RsGeometry::cylinder(converted_ref.0, radius, span, string2axis(orientation)?)
-                .map_err(|e| ConfigError::new_err(e.to_string()))?,
+                .map_err(|e| ConfigError::new_err(e.to_string()))?
+                .with_invert(invert),
         ))
     }
 }
@@ -152,6 +162,8 @@ impl Cylinder {
 ///     Radius of the sphere [nm].
 /// reference : Optional[Union[Sequence[float],str]]
 ///     Center of the sphere. Defaults to [0.0, 0.0, 0.0].
+/// invert : Optional[bool]
+///     Should the geometry selection be inverted? Defaults to False.
 ///
 /// Raises
 /// ------
@@ -168,13 +180,15 @@ impl Sphere {
     #[new]
     #[pyo3(signature = (
         radius,
-        reference = None))]
+        reference = None,
+        invert = false))]
     pub fn new<'a>(
         radius: f32,
         #[gen_stub(override_type(
             type_repr = "typing.Union[typing.Sequence[builtins.float], builtins.str, None]", imports = ("typing")
         ))]
         reference: Option<Bound<'a, PyAny>>,
+        invert: bool,
     ) -> PyResult<Self> {
         let converted_ref = if let Some(reference) = reference {
             GeomReference::extract(reference.as_borrowed())?
@@ -184,7 +198,8 @@ impl Sphere {
 
         Ok(Self(
             RsGeometry::sphere(converted_ref.0, radius)
-                .map_err(|e| ConfigError::new_err(e.to_string()))?,
+                .map_err(|e| ConfigError::new_err(e.to_string()))?
+                .with_invert(invert),
         ))
     }
 }

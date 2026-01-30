@@ -4,8 +4,6 @@
 import builtins
 import typing
 from math import inf
-from math import inf
-from math import inf
 
 @typing.final
 class Cuboid:
@@ -22,13 +20,15 @@ class Cuboid:
         Span of the cuboid along the z-axis [nm]. Defaults to infinite if not specified.
     reference : Optional[Union[Sequence[float],str]]
         Reference point for the cuboid position. Defaults to [0.0, 0.0, 0.0].
+    invert : Optional[bool]
+        Should the geometry selection be inverted? Defaults to False.
     
     Raises
     ------
     ConfigError
         If any dimension is invalid.
     """
-    def __new__(cls, xdim: typing.Sequence[builtins.float] = [-inf, inf], ydim: typing.Sequence[builtins.float] = [-inf, inf], zdim: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Cuboid: ...
+    def __new__(cls, xdim: typing.Sequence[builtins.float] = [-inf, inf], ydim: typing.Sequence[builtins.float] = [-inf, inf], zdim: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None, invert: builtins.bool = False) -> Cuboid: ...
 
 @typing.final
 class Cylinder:
@@ -45,13 +45,15 @@ class Cylinder:
         Span along the main axis [nm]. Defaults to infinite if not specified.
     reference : Optional[Union[Sequence[float],str]]
         Reference point for position and size. Defaults to [0.0, 0.0, 0.0].
+    invert : Optional[bool]
+        Should the geometry selection be inverted? Defaults to False.
     
     Raises
     ------
     ConfigError
         If `radius` is not positive, `span` is invalid, or `orientation` is not recognized.
     """
-    def __new__(cls, radius: builtins.float, orientation: builtins.str, span: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Cylinder: ...
+    def __new__(cls, radius: builtins.float, orientation: builtins.str, span: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None, invert: builtins.bool = False) -> Cylinder: ...
 
 @typing.final
 class Sphere:
@@ -64,11 +66,13 @@ class Sphere:
         Radius of the sphere [nm].
     reference : Optional[Union[Sequence[float],str]]
         Center of the sphere. Defaults to [0.0, 0.0, 0.0].
+    invert : Optional[bool]
+        Should the geometry selection be inverted? Defaults to False.
     
     Raises
     ------
     ConfigError
         If `radius` is not positive.
     """
-    def __new__(cls, radius: builtins.float, reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None) -> Sphere: ...
+    def __new__(cls, radius: builtins.float, reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None, invert: builtins.bool = False) -> Sphere: ...
 

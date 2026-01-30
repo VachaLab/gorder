@@ -1,0 +1,12 @@
+# Test file for binary application.
+structure: tests/files/pcpepg.tpr
+trajectory: tests/files/pcpepg.xtc
+analysis_type: !AAOrder
+  heavy_atoms: "@membrane and element name carbon"
+  hydrogens: "element name hydrogen"
+output: "temp_aa_order_inverted_cuboid.yaml"
+geometry: !Cuboid
+  reference: [8.0, 2.0, 0.0]
+  x: [-2.0, 4.0]
+  y: [-4.0, 1.0]
+  invert: true
