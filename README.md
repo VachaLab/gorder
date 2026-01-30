@@ -127,17 +127,17 @@ A Berger lipids simulation of a membrane obtained from the NMR Lipids DataBank [
 Run times of the analyses performed in the Validation section by various tools. We also show the performance of `gmx order`, even though it actually calculates united-atom order parameters, because it is (unfortunately) commonly used for analyses of all-atom systems as well:
 ![Bar chart showing the run time of various programs.](validation/aaorder_benchmark.png)
 
-*Benchmarks were conducted using `gorder` version 1.3 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). Both `gorder` and `gmx order` were run 5 times each, while `calc_order`, `calc_op.tcl`, and `order_params` were slower so only 1 run for each was performed.*
+*Benchmarks were conducted using `gorder` version 1.4 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). Both `gorder` and `gmx order` were run 5 times each, while `calc_order`, `calc_op.tcl`, and `order_params` were slower so only 1 run for each was performed.*
 
 <sup>*</sup> Note that `order_params` requires the analysis to be run twice to obtain full order parameters for both chains. The reported time is for both runs.
 
-<sup>#</sup> Note that `gmx order` requires the analysis to be run twice to obtain full order parameters for both chains. More importantly, note that `gmx order` does not calculate the order parameters correctly. **You should not use it for an atomistic system!** Even if you only want to calculate lipid order parameters for a single (saturated) chain, `gmx order` is still much slower than `gorder` run using a single thread (20.7 seconds vs 10.7 seconds).
+<sup>#</sup> Note that `gmx order` requires the analysis to be run twice to obtain full order parameters for both chains. More importantly, note that `gmx order` does not calculate the order parameters correctly. **You should not use it for an atomistic system!** Even if you only want to calculate lipid order parameters for a single (saturated) chain, `gmx order` is still much slower than `gorder` run using a single thread (20.7 seconds vs 10.5 seconds).
 
 ### Coarse-grained order parameters
 Run times of the analyses performed in the Validation section by various tools:
 ![Bar chart showing the run time of various programs.](validation/cgorder_benchmark.png)
 
-*Benchmarks were conducted using `gorder` version 1.3 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). Both `gorder` and `order` were run 5 times each, while `do-order` and `lipyphilic` were dramatically slower so only 1 run for each was performed.*
+*Benchmarks were conducted using `gorder` version 1.4 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). Both `gorder` and `order` were run 5 times each, while `do-order` and `lipyphilic` were dramatically slower so only 1 run for each was performed.*
 
 <sup>*</sup> Note that the `lipyphilic` library is not able to calculate order parameters for the individual bonds simultaneously, requiring the analysis to be run multiple times. The reported time is the sum of all runs. If you are only interested in average order parameters for one entire lipid tail, `lipyphilic` is quite fast (though still slower than `gorder`).
 
@@ -145,9 +145,9 @@ Run times of the analyses performed in the Validation section by various tools:
 Run times of the analyses performed in the Validation section by various tools:
 ![Bar chart showing the run time of various programs.](validation/uaorder_benchmark.png)
 
-*Benchmarks were conducted using `gorder` version 1.3 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). `gorder`, `g_lomepro`, and `gmx order` were run 5 times each, while `buildH` was dramatically slower so only 1 run was performed for it. `g_lomepro` was run using 8 threads.*
+*Benchmarks were conducted using `gorder` version 1.4 on GNU/Linux Mint 20.2 with an 8-core Intel Core i7-11700 CPU and Samsung 870 EVO SSD. The benchmarks were run with a cold cache using [`hyperfine`](https://github.com/sharkdp/hyperfine). `gorder`, `g_lomepro`, and `gmx order` were run 5 times each, while `buildH` was dramatically slower so only 1 run was performed for it. `g_lomepro` was run using 8 threads.*
 
-<sup>*</sup> Note that `g_lomepro` and `gmx order` require the analysis to be run twice to obtain full order parameters for both chains. The reported times are for both runs. Even if you only want to calculate lipid order parameters for a single (saturated) chain, `gmx order` is still slightly slower than `gorder` run using a single thread (4.75 seconds vs 4.09 seconds).
+<sup>*</sup> Note that `g_lomepro` and `gmx order` require the analysis to be run twice to obtain full order parameters for both chains. The reported times are for both runs. Even if you only want to calculate lipid order parameters for a single (saturated) chain, `gmx order` is still slightly slower than `gorder` run using a single thread (4.75 seconds vs 4.04 seconds).
 
 ## Python and Rust API
 `gorder` is also available as a Python package and a Rust crate. For more information, see the [gorder manual](https://vachalab.github.io/gorder-manual/), the [Python API documentation](https://vachalab.github.io/pygorder-docs), or the [Rust API documentation](https://docs.rs/gorder/latest/gorder).
