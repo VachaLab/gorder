@@ -20,7 +20,7 @@ use super::{
 };
 use crate::{
     analysis::{
-        spherical_clustering::SystemSphericalClusterClassification,
+        common::get_reference_methyls, spherical_clustering::SystemSphericalClusterClassification,
         topology::molecule::handle_moltypes,
     },
     errors::{
@@ -117,28 +117,6 @@ impl LeafletClassification {
 
         Ok(())
     }
-}
-
-/// Get indices of atoms representing the methyls (or ends of tails) of the given lipid molecule.
-fn get_reference_methyls(molecule: &Group, system: &System) -> Result<Vec<usize>, TopologyError> {
-    let group_name = group_name!("Methyls");
-    let mut atoms = Vec::new();
-
-    for index in molecule.get_atoms().iter() {
-        if system.group_isin(group_name, index).expect(PANIC_MESSAGE) {
-            atoms.push(index);
-        }
-    }
-
-    if atoms.is_empty() {
-        return Err(TopologyError::NoMethyl(
-            molecule
-                .get_atoms()
-                .first()
-                .unwrap_or_else(|| panic!("FATAL GORDER ERROR | leaflets::get_reference_methyls | No atoms detected inside a molecule. {}", PANIC_MESSAGE))));
-    }
-
-    Ok(atoms)
 }
 
 /// Enum handling calculation and propagation of leaflet classification data calculated at the global level (i.e., for the entire system).
@@ -245,6 +223,7 @@ impl MoleculeLeafletClassification {
                 (
                     None,
                     MembraneNormal::Dynamic(_)
+                    | MembraneNormal::Individual(_)
                     | MembraneNormal::FromFile(_)
                     | MembraneNormal::FromMap(_),
                 ) => Err(ConfigError::MissingMembraneNormal),
@@ -754,7 +733,11 @@ impl IndividualClassification {
     fn insert(&mut self, molecule: &Group, system: &System) -> Result<(), TopologyError> {
         self.heads
             .push(get_reference_head(molecule, system, group_name!("Heads"))?);
-        self.methyls.push(get_reference_methyls(molecule, system)?);
+        self.methyls.push(get_reference_methyls(
+            molecule,
+            system,
+            group_name!("Methyls"),
+        )?);
 
         // check that the number of methyls is concistent in the molecule
         if self.methyls.len() > 1 {

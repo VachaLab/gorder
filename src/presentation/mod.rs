@@ -230,10 +230,20 @@ pub(crate) trait OrderResults:
 
         if let Some(data) = self.normals_data() {
             // only export data, if an output file is provided
-            if let MembraneNormal::Dynamic(params) = analysis.membrane_normal() {
-                if let Collect::File(filename) = params.collect() {
-                    data.export(filename, analysis.trajectory(), analysis.overwrite())?;
+            match analysis.membrane_normal() {
+                MembraneNormal::Dynamic(params) => {
+                    if let Collect::File(filename) = params.collect() {
+                        data.export(filename, analysis.trajectory(), analysis.overwrite())?;
+                    }
                 }
+                MembraneNormal::Individual(params) => {
+                    if let Collect::File(filename) = params.collect() {
+                        data.export(filename, analysis.trajectory(), analysis.overwrite())?;
+                    }
+                }
+                MembraneNormal::Static(_)
+                | MembraneNormal::FromFile(_)
+                | MembraneNormal::FromMap(_) => (),
             }
         }
 

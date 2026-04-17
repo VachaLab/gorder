@@ -22,8 +22,10 @@ use super::Axis;
 pub enum MembraneNormal {
     /// Membrane normal is oriented along a dimension of the simulation box: x, y, or z axis.
     Static(Axis),
-    /// Membrane normal should be calculated dynamically for each molecule based on the shape of the membrane.
+    /// Membrane normal is calculated dynamically for each molecule based on the shape of the membrane.
     Dynamic(DynamicNormal),
+    /// Orientation of the lipid is used as the membrane normal.
+    Individual(IndividualNormal),
     /// Membrane normals for individual molecules should be read from a yaml file.
     FromFile(String),
     /// Membrane normals for individual molecules should be set from a map.
@@ -35,7 +37,7 @@ impl MembraneNormal {
     /// Check the validity of the membrane normal.
     pub(super) fn validate(&self) -> Result<(), ConfigError> {
         match self {
-            Self::Static(_) | Self::FromFile(_) | Self::FromMap(_) => Ok(()),
+            Self::Static(_) | Self::FromFile(_) | Self::FromMap(_) | Self::Individual(_) => Ok(()),
             Self::Dynamic(dynamic) => DynamicNormal::check_radius(dynamic.radius),
         }
     }
@@ -53,6 +55,11 @@ impl Display for MembraneNormal {
                 f,
                 "Membrane normal will be {} calculated for each molecule.",
                 "dynamically".cyan(),
+            ),
+            Self::Individual(_) => write!(
+                f,
+                "Membrane normal will be the orientation vector calculated {} for each molecule.",
+                "individually".cyan(),
             ),
             Self::FromFile(x) => {
                 write!(
@@ -154,6 +161,48 @@ fn default_dynamic_radius() -> f32 {
     2.0
 }
 
+/// Structure describing properties of the individual membrane normal calculation.
+#[derive(Debug, Clone, Getters, CopyGetters, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IndividualNormal {
+    /// Reference atoms identifying lipid headgroups (usually a phosphorus atom or a phosphate bead).
+    /// There must only be one such atom/bead per lipid molecule.
+    #[getset(get = "pub")]
+    heads: String,
+    /// Reference atoms identifying methyl groups of lipid tails, i.e., the ends of lipid tails.
+    /// There should be only one such atom/bead per one acyl chain in the molecule (e.g., two for lipids with two acyl chains).
+    #[getset(get = "pub")]
+    methyls: String,
+    /// Should the calculated membrane normals be collected, stored and exported into an output file?
+    #[getset(get = "pub")]
+    #[serde(default, alias = "export")]
+    collect: Collect,
+}
+
+impl IndividualNormal {
+    /// Request an individual membrane normal calculation.
+    ///
+    /// ## Parameters
+    /// - `heads`: reference atoms identifying lipid headgroups (usually a phosphorus atom or a phosphate bead);
+    ///    there must only be one such atom/bead per lipid molecule
+    /// - `methyls`: reference atoms identifying methyl groups of lipid tails, i.e., the end of lipid tails
+    pub fn new(heads: &str, methyls: &str) -> IndividualNormal {
+        IndividualNormal {
+            heads: heads.to_owned(),
+            methyls: methyls.to_owned(),
+            collect: Default::default(),
+        }
+    }
+
+    /// Collect and store the individual membrane normals.
+    /// If `true`, the normals are collected but only accessible using API.
+    /// If a string is provided, the data will be exported into the output file.
+    pub fn with_collect(mut self, collect: impl Into<Collect>) -> Self {
+        self.collect = collect.into();
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,6 +234,17 @@ mod tests {
             _ => panic!("Incorrect membrane normal parsed."),
         }
 
+        match serde_yaml::from_str("!Individual { heads: \"name PO4\", methyls: \"name C4A C4B\" }")
+            .unwrap()
+        {
+            MembraneNormal::Individual(individual) => {
+                assert_eq!(individual.heads(), "name PO4");
+                assert_eq!(individual.methyls(), "name C4A C4B");
+                assert_eq!(individual.collect(), &Collect::Boolean(false));
+            }
+            _ => panic!("Incorrect membrane normal parsed."),
+        }
+
         match serde_yaml::from_str("!Dynamic { heads: \"name P\", export: normals.yaml }").unwrap()
         {
             MembraneNormal::Dynamic(dynamic) => {
@@ -205,6 +265,22 @@ mod tests {
                 assert_relative_eq!(dynamic.radius, 2.0);
                 assert_eq!(
                     dynamic.collect(),
+                    &Collect::File(String::from("normals.yaml"))
+                );
+            }
+            _ => panic!("Incorrect membrane normal parsed."),
+        }
+
+        match serde_yaml::from_str(
+            "!Individual { heads: \"name PO4\", methyls: \"name C4A C4B\", export: normals.yaml }",
+        )
+        .unwrap()
+        {
+            MembraneNormal::Individual(individual) => {
+                assert_eq!(individual.heads(), "name PO4");
+                assert_eq!(individual.methyls(), "name C4A C4B");
+                assert_eq!(
+                    individual.collect(),
                     &Collect::File(String::from("normals.yaml"))
                 );
             }
@@ -298,6 +374,18 @@ POPC:
             "!Dynamic
 heads: name P
 radius: 3.0
+collect: false\n"
+        );
+
+        assert_eq!(
+            serde_yaml::to_string(&MembraneNormal::Individual(IndividualNormal::new(
+                "name PO4",
+                "name C4A C4B"
+            )))
+            .unwrap(),
+            "!Individual
+heads: name PO4
+methyls: name C4A C4B
 collect: false\n"
         );
 

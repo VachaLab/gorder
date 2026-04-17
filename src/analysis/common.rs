@@ -41,6 +41,7 @@ fn get_hint(group: &str) -> String {
         "Membrane" => ("membrane".bright_blue(), "leaflets".bright_blue()),
         "Heads" => ("heads".bright_blue(), "leaflets".bright_blue()),
         "NormalHeads" => ("heads".bright_blue(), "membrane_normal".bright_blue()),
+        "NormalMethyls" => ("methyls".bright_blue(), "membrane_normal".bright_blue()),
         "ClusterHeads" => ("heads".bright_blue(), "leaflets".bright_blue()),
         "Methyls" => ("methyls".bright_blue(), "leaflets".bright_blue()),
         "GeomReference" => ("reference".bright_blue(), "geometry".bright_blue()),
@@ -179,6 +180,11 @@ pub(super) fn prepare_membrane_normal_calculation(
             Ok(())
         } // do nothing
         MembraneNormal::Dynamic(params) => create_group(system, "NormalHeads", params.heads()),
+        MembraneNormal::Individual(params) => {
+            create_group(system, "NormalHeads", params.heads())?;
+            create_group(system, "NormalMethyls", params.methyls())?;
+            Ok(())
+        }
     }
 }
 
@@ -372,6 +378,34 @@ pub(super) fn get_reference_head(
     }
 
     Ok(*atoms.first().expect(PANIC_MESSAGE))
+}
+
+/// Get indices of atoms representing the methyls (or ends of tails) of the given lipid molecule.
+pub(super) fn get_reference_methyls(
+    molecule: &Group,
+    system: &System,
+    group_to_search: &'static str,
+) -> Result<Vec<usize>, TopologyError> {
+    let mut atoms = Vec::new();
+
+    for index in molecule.get_atoms().iter() {
+        if system
+            .group_isin(group_to_search, index)
+            .expect(PANIC_MESSAGE)
+        {
+            atoms.push(index);
+        }
+    }
+
+    if atoms.is_empty() {
+        return Err(TopologyError::NoMethyl(
+            molecule
+                .get_atoms()
+                .first()
+                .unwrap_or_else(|| panic!("FATAL GORDER ERROR | common::get_reference_methyls | No atoms detected inside a molecule. {}", PANIC_MESSAGE))));
+    }
+
+    Ok(atoms)
 }
 
 /// Returns a new vector by interleaving elements from two slices.

@@ -137,15 +137,30 @@ impl<O: MolConvert> ResultsConverter<O> {
                     return None;
                 }
             }
-            _ => return None,
+            MembraneNormal::Individual(normal) => {
+                if let Collect::Boolean(false) = normal.collect() {
+                    return None;
+                }
+            }
+            MembraneNormal::FromFile(_)
+            | MembraneNormal::FromMap(_)
+            | MembraneNormal::Static(_) => return None,
         }
 
         let mut normals_data = NormalsData::new(analysis.step(), n_analyzed_frames);
         for mol in molecule_types.iter() {
-            if let MoleculeMembraneNormal::Dynamic(normal) = mol.membrane_normal() {
-                if let Some(data) = normal.extract_storage() {
-                    normals_data.add_molecule_type(mol.name(), data);
+            match mol.membrane_normal() {
+                MoleculeMembraneNormal::Dynamic(normal) => {
+                    if let Some(data) = normal.extract_storage() {
+                        normals_data.add_molecule_type(mol.name(), data);
+                    }
                 }
+                MoleculeMembraneNormal::Individual(normal) => {
+                    if let Some(data) = normal.extract_storage() {
+                        normals_data.add_molecule_type(mol.name(), data);
+                    }
+                }
+                MoleculeMembraneNormal::Static(_) | MoleculeMembraneNormal::Manual(_) => (),
             }
         }
 

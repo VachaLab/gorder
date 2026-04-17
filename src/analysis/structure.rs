@@ -240,6 +240,9 @@ fn should_guess_elements(analysis: &Analysis) -> bool {
             false
         }
         MembraneNormal::Dynamic(dynamic) => has_element(dynamic.heads()),
+        MembraneNormal::Individual(individual) => {
+            has_element(individual.heads()) || has_element(individual.methyls())
+        }
     };
 
     guess
