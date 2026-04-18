@@ -280,7 +280,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "numpy", specifier = ">=2.2.3" },
-    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest", specifier = ">=9.0.3" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "twine", specifier = ">=6.2.0" },
 ]
