@@ -20,7 +20,7 @@ pub use estimate_error::EstimateError;
 pub use frequency::Frequency;
 pub use geometry::{GeomReference, Geometry};
 pub use leaflets::LeafletClassification;
-pub use membrane_normal::{DynamicNormal, MembraneNormal};
+pub use membrane_normal::{DynamicNormal, IndividualNormal, MembraneNormal};
 pub use ordermap::{GridSpan, OrderMap, Plane};
 use serde::{
     de::{self, Visitor},

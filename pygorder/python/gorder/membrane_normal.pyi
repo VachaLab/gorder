@@ -20,7 +20,7 @@ class DynamicNormal:
         estimation in nm. Recommended value is half the membrane thickness.
         Must be greater than 0. The default value is 2.0 (nm).
     collect : Optional[Union[bool, str]], default=False
-        Determines whether dynamic membrane normals are saved and exported.
+        Determines whether membrane normals are saved and exported.
         By default (`False`), normals are not saved.
         If `True`, normals are saved internally and accessible via the Python API, but not written to a file.
         If a string is provided, normals are saved and written to the specified output file.
@@ -31,4 +31,26 @@ class DynamicNormal:
         If `radius` is not positive.
     """
     def __new__(cls, heads: builtins.str, radius: builtins.float = 2.0, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None) -> DynamicNormal: ...
+
+@typing.final
+class IndividualNormal:
+    r"""
+    Request molecule director to be used as local membrane normal.
+    
+    Parameters
+    ----------
+    heads : str
+        Selection query specifying reference atoms representing lipid headgroups
+        (typically phosphorus atoms or phosphate beads). Must be exactly one
+        atom/bead per lipid molecule.
+    methyls : str
+        Selection query specifying reference atoms representing methyl groups at the ends of lipid tails.
+        There should be exactly one such atom/bead per acyl chain (e.g., two for lipids with two acyl chains).
+    collect : Optional[Union[bool, str]], default=False
+        Determines whether membrane normals are saved and exported.
+        By default (`False`), normals are not saved.
+        If `True`, normals are saved internally and accessible via the Python API, but not written to a file.
+        If a string is provided, normals are saved and written to the specified output file.
+    """
+    def __new__(cls, heads: builtins.str, methyls: builtins.str, collect: typing.Optional[typing.Union[builtins.bool, builtins.str]] = None) -> IndividualNormal: ...
 

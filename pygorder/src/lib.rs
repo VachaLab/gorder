@@ -186,6 +186,7 @@ fn gorder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // module: membrane_normal
     let membrane_normal = PyModule::new(m.py(), "membrane_normal")?;
     membrane_normal.add_class::<normal::DynamicNormal>()?;
+    membrane_normal.add_class::<normal::IndividualNormal>()?;
     m.add_submodule(&membrane_normal)?;
 
     // module: leaflets

@@ -256,7 +256,7 @@ impl Analysis {
         output_xvg: Option<&str>,
         output_csv: Option<&str>,
         #[gen_stub(override_type(
-            type_repr = "typing.Optional[typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.float32]], gorder.membrane_normal.DynamicNormal]]", imports=("typing", "numpy")
+            type_repr = "typing.Optional[typing.Union[builtins.str, typing.Mapping[builtins.str, numpy.typing.NDArray[numpy.float32]], gorder.membrane_normal.DynamicNormal, gorder.membrane_normal.IndividualNormal]]", imports=("typing", "numpy")
         ))]
         membrane_normal: Option<Bound<'a, PyAny>>,
         begin: Option<f32>,

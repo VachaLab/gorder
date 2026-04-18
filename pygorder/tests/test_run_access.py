@@ -7,30 +7,36 @@ Copyright (c) 2024-2026 Ladislav Bartos
 
 import gorder, pytest, math
 
+
 def compare_orders(x: float, y: float) -> bool:
-    return math.isclose(round(x, 4), round(y, 4), rel_tol = 1e-4)
+    return math.isclose(round(x, 4), round(y, 4), rel_tol=1e-4)
+
 
 def compare_normals(x: list[float], y: list[float]) -> bool:
     """
     Expects normals not containing any NaN values.
     """
 
-    for (val1, val2) in zip(x, y):
-        if not math.isclose(round(val1, 5), round(val2, 5), rel_tol = 1e-4):
+    for val1, val2 in zip(x, y):
+        if not math.isclose(round(val1, 5), round(val2, 5), rel_tol=1e-4):
             return False
-    
+
     return True
+
 
 def normal_is_nan(x: list[float]) -> bool:
     return math.isnan(x[0]) and math.isnan(x[1]) and math.isnan(x[2])
 
+
 def test_aa_order_basic():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder("@membrane and element name carbon", "@membrane and element name hydrogen"),
-        silent = True,
-        overwrite = True,
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
+        ),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -38,12 +44,12 @@ def test_aa_order_basic():
     assert results.n_analyzed_frames() == 51
     assert len(results.molecules()) == 3
     assert results.normals_data() is None
-    
+
     assert compare_orders(results.average_order().total().value(), 0.1423)
     assert results.average_order().total().error() is None
     assert results.average_order().upper() is None
     assert results.average_order().lower() is None
-    
+
     assert results.average_ordermaps().total() is None
     assert results.average_ordermaps().upper() is None
     assert results.average_ordermaps().lower() is None
@@ -66,7 +72,7 @@ def test_aa_order_basic():
     expected_atom2_names = ["H2Y", "H2Y", "H2Y"]
     expected_atom2_order = [0.2040, 0.2317, 0.2020]
 
-    for (i, molecule) in enumerate(results.molecules()):
+    for i, molecule in enumerate(results.molecules()):
         assert molecule.molecule() == expected_molecule_names[i]
 
         average_order = molecule.average_order()
@@ -144,31 +150,36 @@ def test_aa_order_basic():
         # NONEXISTENT BOND
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(7, 19)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(145, 189)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_cg_order_basic():
     analysis = gorder.Analysis(
-        structure = "../tests/files/cg.tpr",
-        trajectory = "../tests/files/cg.xtc",
-        analysis_type = gorder.analysis_types.CGOrder("@membrane"),
-        silent = True,
-        overwrite = True,
+        structure="../tests/files/cg.tpr",
+        trajectory="../tests/files/cg.xtc",
+        analysis_type=gorder.analysis_types.CGOrder("@membrane"),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
 
     assert results.n_analyzed_frames() == 101
     assert len(results.molecules()) == 3
-    
+
     assert compare_orders(results.average_order().total().value(), 0.2962)
     assert results.average_order().total().error() is None
     assert results.average_order().upper() is None
     assert results.average_order().lower() is None
-    
+
     assert results.average_ordermaps().total() is None
     assert results.average_ordermaps().upper() is None
     assert results.average_ordermaps().lower() is None
@@ -181,7 +192,7 @@ def test_cg_order_basic():
     expected_average_orders = [0.2943, 0.2972, 0.3059]
     expected_bond_orders = [0.3682, 0.3759, 0.3789]
 
-    for (i, molecule) in enumerate(results.molecules()):
+    for i, molecule in enumerate(results.molecules()):
         assert molecule.molecule() == expected_molecule_names[i]
 
         average_order = molecule.average_order()
@@ -227,31 +238,42 @@ def test_cg_order_basic():
         # NONEXISTENT BOND
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 3)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(15, 16)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         # ATTEMPTING TO ACCESS ATOMS
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.atoms()
-        assert "results for individual atoms are not available for coarse-grained order parameters" in str(excinfo.value)
+        assert (
+            "results for individual atoms are not available for coarse-grained order parameters"
+            in str(excinfo.value)
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_atom(3)
-        assert "results for individual atoms are not available for coarse-grained order parameters" in str(excinfo.value)
+        assert (
+            "results for individual atoms are not available for coarse-grained order parameters"
+            in str(excinfo.value)
+        )
+
 
 def test_ua_order_basic():
     analysis = gorder.Analysis(
-        structure = "../tests/files/ua.tpr",
-        trajectory = "../tests/files/ua.xtc",
-        analysis_type = gorder.analysis_types.UAOrder(
-            saturated = "(resname POPC and name r'^C' and not name C15 C34 C24 C25) or (resname POPS and name r'^C' and not name C6 C18 C39 C27 C28)",
-            unsaturated = "(resname POPC and name C24 C25) or (resname POPS and name C27 C28)",
+        structure="../tests/files/ua.tpr",
+        trajectory="../tests/files/ua.xtc",
+        analysis_type=gorder.analysis_types.UAOrder(
+            saturated="(resname POPC and name r'^C' and not name C15 C34 C24 C25) or (resname POPS and name r'^C' and not name C6 C18 C39 C27 C28)",
+            unsaturated="(resname POPC and name C24 C25) or (resname POPS and name C27 C28)",
         ),
-        silent = True,
-        overwrite = True,
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -327,7 +349,9 @@ def test_ua_order_basic():
         assert len(atom.bonds()) == expected_bond_numbers[i]
 
         for b, bond in enumerate(atom.bonds()):
-            assert compare_orders(bond.order().total().value(), expected_bond_orders[i][b])
+            assert compare_orders(
+                bond.order().total().value(), expected_bond_orders[i][b]
+            )
             assert bond.order().total().error() is None
             assert bond.order().upper() is None
             assert bond.order().lower() is None
@@ -349,19 +373,22 @@ def test_ua_order_basic():
         # ACCESSING BONDS
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(49, 1)
-        assert "united-atom results for individual bonds cannot be accesed by using relative indices" in str(excinfo.value)
+        assert (
+            "united-atom results for individual bonds cannot be accesed by using relative indices"
+            in str(excinfo.value)
+        )
+
 
 def test_aa_order_error():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder(
-            "@membrane and element name carbon",
-            "@membrane and element name hydrogen"
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
         ),
-        estimate_error = gorder.estimate_error.EstimateError(),
-        silent = True,
-        overwrite = True,
+        estimate_error=gorder.estimate_error.EstimateError(),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -415,7 +442,7 @@ def test_aa_order_error():
         # CONVERGENCE
         convergence = molecule.convergence()
         assert convergence.frames() == expected_convergence_frames
-        
+
         sample_frames = [0, 25, 50]
         extracted_conv = convergence.total()
         for j, frame in enumerate(sample_frames):
@@ -457,7 +484,7 @@ def test_aa_order_error():
         assert a2.relative_index() == expected_atom2_indices[i]
         assert a2.residue_name() == expected_molecule_names[i]
         assert bond.molecule() == expected_molecule_names[i]
-        
+
         bond_order = bond.order()
         assert compare_orders(bond_order.total().value(), expected_atom2_order[i])
         assert compare_orders(bond_order.total().error(), expected_atom2_errors[i])
@@ -478,10 +505,13 @@ def test_aa_order_error():
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_atom(145)
         assert "atom with the given relative index does not exist" in str(excinfo.value)
-            
+
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(7, 19)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_cg_order_error():
     analysis = gorder.Analysis(
@@ -573,11 +603,16 @@ def test_cg_order_error():
         # NONEXISTENT BONDS
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 3)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(15, 16)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_ua_order_error():
     analysis = gorder.Analysis(
@@ -599,7 +634,7 @@ def test_ua_order_error():
 
     results.get_molecule("POPC")
     results.get_molecule("POPS")
-    
+
     with pytest.raises(gorder.exceptions.APIError) as excinfo:
         results.get_molecule("POPG")
     assert "molecule with the given name does not exist" in str(excinfo.value)
@@ -618,7 +653,7 @@ def test_ua_order_error():
     expected_average_errors = [0.0019, 0.0106]
     expected_atom_numbers = [40, 37]
     expected_molecule_names = ["POPC", "POPS"]
-    
+
     expected_atom_indices = [23, 45]
     expected_atom_names = ["C24", "C46"]
     expected_atom_order = [0.0978, 0.2221]
@@ -645,7 +680,7 @@ def test_ua_order_error():
         # ATOMS
         assert len(molecule.atoms()) == expected_atom_numbers[i]
         atom = molecule.get_atom(expected_atom_indices[i])
-        
+
         assert atom.atom().atom_name() == expected_atom_names[i]
         assert atom.atom().relative_index() == expected_atom_indices[i]
         assert atom.molecule() == expected_molecule_names[i]
@@ -670,7 +705,7 @@ def test_ua_order_error():
             assert compare_orders(bond_order.error(), expected_bond_errors[i][b_idx])
             assert bond.order().upper() is None
             assert bond.order().lower() is None
-            
+
             assert bond.ordermaps().total() is None
             assert bond.ordermaps().upper() is None
             assert bond.ordermaps().lower() is None
@@ -681,19 +716,22 @@ def test_ua_order_error():
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 2)
-        assert "united-atom results for individual bonds cannot be accesed by using relative indices" in str(excinfo.value)
+        assert (
+            "united-atom results for individual bonds cannot be accesed by using relative indices"
+            in str(excinfo.value)
+        )
+
 
 def test_aa_order_leaflets():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder(
-            "@membrane and element name carbon",
-            "@membrane and element name hydrogen"
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
         ),
-        leaflets = gorder.leaflets.GlobalClassification("@membrane", "name P"),
-        silent = True,
-        overwrite = True,
+        leaflets=gorder.leaflets.GlobalClassification("@membrane", "name P"),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -807,10 +845,13 @@ def test_aa_order_leaflets():
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_atom(145)
         assert "atom with the given relative index does not exist" in str(excinfo.value)
-            
+
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(7, 19)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_cg_order_leaflets():
     analysis = gorder.Analysis(
@@ -891,11 +932,16 @@ def test_cg_order_leaflets():
         # NONEXISTENT BONDS
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 3)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(15, 16)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_ua_order_leaflets():
     analysis = gorder.Analysis(
@@ -917,7 +963,7 @@ def test_ua_order_leaflets():
 
     results.get_molecule("POPC")
     results.get_molecule("POPS")
-    
+
     with pytest.raises(gorder.exceptions.APIError) as excinfo:
         results.get_molecule("POPG")
     assert "molecule with the given name does not exist" in str(excinfo.value)
@@ -926,7 +972,7 @@ def test_ua_order_leaflets():
     assert compare_orders(avg_order.total().value(), 0.1169)
     assert compare_orders(avg_order.upper().value(), 0.1151)
     assert compare_orders(avg_order.lower().value(), 0.1186)
-    
+
     assert results.average_ordermaps().total() is None
     assert results.average_ordermaps().upper() is None
     assert results.average_ordermaps().lower() is None
@@ -956,14 +1002,14 @@ def test_ua_order_leaflets():
         assert compare_orders(mol_order.total().value(), expected_average_orders[i])
         assert compare_orders(mol_order.upper().value(), expected_average_upper[i])
         assert compare_orders(mol_order.lower().value(), expected_average_lower[i])
-        
+
         assert molecule.average_ordermaps().total() is None
         assert molecule.average_ordermaps().upper() is None
         assert molecule.average_ordermaps().lower() is None
 
         assert len(molecule.atoms()) == expected_atom_numbers[i]
         atom = molecule.get_atom(expected_atom_indices[i])
-        
+
         assert atom.atom().atom_name() == expected_atom_names[i]
         assert atom.atom().relative_index() == expected_atom_indices[i]
         assert atom.molecule() == expected_molecule_names[i]
@@ -972,7 +1018,7 @@ def test_ua_order_leaflets():
         assert compare_orders(atom_order.total().value(), expected_atom_order[i])
         assert compare_orders(atom_order.upper().value(), expected_atom_upper[i])
         assert compare_orders(atom_order.lower().value(), expected_atom_lower[i])
-        
+
         assert atom.ordermaps().total() is None
         assert atom.ordermaps().upper() is None
         assert atom.ordermaps().lower() is None
@@ -981,10 +1027,16 @@ def test_ua_order_leaflets():
         assert len(atom.bonds()) == expected_bond_numbers[i]
 
         for b_idx, bond in enumerate(atom.bonds()):
-            assert compare_orders(bond.order().total().value(), expected_bond_orders[i][b_idx])
-            assert compare_orders(bond.order().upper().value(), expected_bond_upper[i][b_idx])
-            assert compare_orders(bond.order().lower().value(), expected_bond_lower[i][b_idx])
-            
+            assert compare_orders(
+                bond.order().total().value(), expected_bond_orders[i][b_idx]
+            )
+            assert compare_orders(
+                bond.order().upper().value(), expected_bond_upper[i][b_idx]
+            )
+            assert compare_orders(
+                bond.order().lower().value(), expected_bond_lower[i][b_idx]
+            )
+
             assert bond.ordermaps().total() is None
             assert bond.ordermaps().upper() is None
             assert bond.ordermaps().lower() is None
@@ -995,15 +1047,18 @@ def test_ua_order_leaflets():
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 2)
-        assert "united-atom results for individual bonds cannot be accesed by using relative indices" in str(excinfo.value)
+        assert (
+            "united-atom results for individual bonds cannot be accesed by using relative indices"
+            in str(excinfo.value)
+        )
+
 
 def test_aa_order_error_leaflets():
     analysis = gorder.Analysis(
         structure="../tests/files/pcpepg.tpr",
         trajectory="../tests/files/pcpepg.xtc",
         analysis_type=gorder.analysis_types.AAOrder(
-            "@membrane and element name carbon",
-            "@membrane and element name hydrogen"
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
         ),
         leaflets=gorder.leaflets.GlobalClassification("@membrane", "name P"),
         estimate_error=gorder.estimate_error.EstimateError(),
@@ -1106,10 +1161,13 @@ def test_aa_order_error_leaflets():
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_atom(145)
         assert "atom with the given relative index does not exist" in str(excinfo.value)
-            
+
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(7, 19)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_cg_order_error_leaflets():
     analysis = gorder.Analysis(
@@ -1185,11 +1243,16 @@ def test_cg_order_error_leaflets():
         # NONEXISTENT BONDS
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 3)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(15, 16)
-        assert "bond specified by the given relative indices does not exist" in str(excinfo.value)
+        assert "bond specified by the given relative indices does not exist" in str(
+            excinfo.value
+        )
+
 
 def test_ua_order_error_leaflets():
     analysis = gorder.Analysis(
@@ -1212,7 +1275,7 @@ def test_ua_order_error_leaflets():
 
     assert results.get_molecule("POPC") is not None
     assert results.get_molecule("POPS") is not None
-    
+
     with pytest.raises(gorder.exceptions.APIError):
         results.get_molecule("POPG")
 
@@ -1248,7 +1311,7 @@ def test_ua_order_error_leaflets():
 
         assert len(molecule.atoms()) == expected_atom_numbers[i]
         atom = molecule.get_atom(expected_atom_indices[i])
-        
+
         assert atom.atom().atom_name() == expected_atom_names[i]
         assert atom.atom().relative_index() == expected_atom_indices[i]
 
@@ -1266,7 +1329,7 @@ def test_ua_order_error_leaflets():
             assert bond.order().total().error() is not None
             assert bond.order().upper().error() is not None
             assert bond.order().lower().error() is not None
-            
+
             assert bond.ordermaps().total() is None
             assert bond.ordermaps().upper() is None
             assert bond.ordermaps().lower() is None
@@ -1278,19 +1341,22 @@ def test_ua_order_error_leaflets():
 
         with pytest.raises(gorder.exceptions.APIError) as excinfo:
             molecule.get_bond(1, 2)
-        assert "united-atom results for individual bonds cannot be accesed by using relative indices" in str(excinfo.value)
+        assert (
+            "united-atom results for individual bonds cannot be accesed by using relative indices"
+            in str(excinfo.value)
+        )
+
 
 def test_aa_order_ordermaps():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder(
-            "resname POPC and name C22 C24 C218", 
-            "@membrane and element name hydrogen"
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "resname POPC and name C22 C24 C218", "@membrane and element name hydrogen"
         ),
-        ordermap = gorder.ordermap.OrderMap(bin_size = [0.1, 4.0], min_samples = 5),
-        silent = True,
-        overwrite = True,
+        ordermap=gorder.ordermap.OrderMap(bin_size=[0.1, 4.0], min_samples=5),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -1302,7 +1368,7 @@ def test_aa_order_ordermaps():
     assert results.average_order().total() is not None
     assert results.average_order().upper() is None
     assert results.average_order().lower() is None
-    
+
     map = results.average_ordermaps().total()
     assert compare_orders(map.get_at(0.6, 8.0), 0.1653)
     assert compare_orders(map.get_at(4.3, 0.0), 0.1340)
@@ -1320,12 +1386,12 @@ def test_aa_order_ordermaps():
     span_y = map.span_y()
     bin = map.tile_dim()
 
-    assert math.isclose(span_x[0], 0.0, rel_tol = 1e-5)
-    assert math.isclose(span_x[1], 9.15673, rel_tol = 1e-5)
-    assert math.isclose(span_y[0], 0.0, rel_tol = 1e-5)
-    assert math.isclose(span_y[1], 9.15673, rel_tol = 1e-5)
-    assert math.isclose(bin[0], 0.1, rel_tol = 1e-5)
-    assert math.isclose(bin[1], 4.0, rel_tol = 1e-5)
+    assert math.isclose(span_x[0], 0.0, rel_tol=1e-5)
+    assert math.isclose(span_x[1], 9.15673, rel_tol=1e-5)
+    assert math.isclose(span_y[0], 0.0, rel_tol=1e-5)
+    assert math.isclose(span_y[1], 9.15673, rel_tol=1e-5)
+    assert math.isclose(bin[0], 0.1, rel_tol=1e-5)
+    assert math.isclose(bin[1], 4.0, rel_tol=1e-5)
 
     assert compare_orders(map.get_at(0.6, 8.0), 0.1653)
     assert compare_orders(map.get_at(4.3, 0.0), 0.1340)
@@ -1355,30 +1421,30 @@ def test_aa_order_ordermaps():
     (extracted_x, extracted_y, extracted_values) = map.extract()
     assert len(extracted_x) == 93
     assert len(extracted_y) == 3
-   
-    for (real, expected) in zip(extracted_x, [x / 10 for x in range(0, 93)]):
-        assert math.isclose(real, expected, rel_tol = 1e-5)
-   
-    for (real, expected) in zip(extracted_y, [0.0, 4.0, 8.0]):
-        assert math.isclose(real, expected, rel_tol = 1e-5)
-   
-    for (xi, x) in enumerate(extracted_x):
-        for (yi, y) in enumerate(extracted_y):
+
+    for real, expected in zip(extracted_x, [x / 10 for x in range(0, 93)]):
+        assert math.isclose(real, expected, rel_tol=1e-5)
+
+    for real, expected in zip(extracted_y, [0.0, 4.0, 8.0]):
+        assert math.isclose(real, expected, rel_tol=1e-5)
+
+    for xi, x in enumerate(extracted_x):
+        for yi, y in enumerate(extracted_y):
             get = map.get_at(x, y)
             ext = extracted_values[xi][yi]
             if math.isnan(get) and math.isnan(ext):
                 continue
             assert compare_orders(map.get_at(x, y), extracted_values[xi][yi])
 
+
 def test_cg_order_ordermaps():
     analysis = gorder.Analysis(
         structure="../tests/files/cg.tpr",
         trajectory="../tests/files/cg.xtc",
-        analysis_type=gorder.analysis_types.CGOrder("resname POPC and name C1B C2B C3B C4B"),
-        ordermap=gorder.ordermap.OrderMap(
-            bin_size=[1.0, 1.0],
-            min_samples=10
+        analysis_type=gorder.analysis_types.CGOrder(
+            "resname POPC and name C1B C2B C3B C4B"
         ),
+        ordermap=gorder.ordermap.OrderMap(bin_size=[1.0, 1.0], min_samples=10),
         silent=True,
         overwrite=True,
     )
@@ -1392,7 +1458,7 @@ def test_cg_order_ordermaps():
     assert results.average_order().total() is not None
     assert results.average_order().upper() is None
     assert results.average_order().lower() is None
-    
+
     map = results.average_ordermaps().total()
     assert compare_orders(map.get_at(1.0, 8.0), 0.3590)
     assert compare_orders(map.get_at(7.0, 0.0), 0.3765)
@@ -1403,7 +1469,7 @@ def test_cg_order_ordermaps():
     # MOLECULE
     molecule = results.get_molecule("POPC")
     mol_maps = molecule.average_ordermaps()
-    
+
     total_map = mol_maps.total()
     assert mol_maps.upper() is None
     assert mol_maps.lower() is None
@@ -1411,7 +1477,7 @@ def test_cg_order_ordermaps():
     span_x = total_map.span_x()
     span_y = total_map.span_y()
     bin_size = total_map.tile_dim()
-    
+
     assert math.isclose(span_x[0], 0.0, rel_tol=1e-5)
     assert math.isclose(span_x[1], 12.747616, rel_tol=1e-5)
     assert math.isclose(span_y[0], 0.0, rel_tol=1e-5)
@@ -1426,7 +1492,7 @@ def test_cg_order_ordermaps():
     # BOND
     bond = molecule.get_bond(9, 10)
     bond_maps = bond.ordermaps()
-    
+
     bond_total = bond_maps.total()
     assert bond_maps.upper() is None
     assert bond_maps.lower() is None
@@ -1439,32 +1505,33 @@ def test_cg_order_ordermaps():
     (extracted_x, extracted_y, extracted_values) = map.extract()
     assert len(extracted_x) == 14
     assert len(extracted_y) == 14
-   
-    for (real, expected) in zip(extracted_x, [x for x in range(0, 14)]):
-        assert math.isclose(real, expected, rel_tol = 1e-5)
-   
-    for (real, expected) in zip(extracted_y, [y for y in range(0, 14)]):
-        assert math.isclose(real, expected, rel_tol = 1e-5)
-   
-    for (xi, x) in enumerate(extracted_x):
-        for (yi, y) in enumerate(extracted_y):
+
+    for real, expected in zip(extracted_x, [x for x in range(0, 14)]):
+        assert math.isclose(real, expected, rel_tol=1e-5)
+
+    for real, expected in zip(extracted_y, [y for y in range(0, 14)]):
+        assert math.isclose(real, expected, rel_tol=1e-5)
+
+    for xi, x in enumerate(extracted_x):
+        for yi, y in enumerate(extracted_y):
             get = map.get_at(x, y)
             ext = extracted_values[xi][yi]
             if math.isnan(get) and math.isnan(ext):
                 continue
             assert compare_orders(map.get_at(x, y), extracted_values[xi][yi])
 
+
 def test_ua_order_ordermaps():
     analysis = gorder.Analysis(
-        structure = "../tests/files/ua.tpr",
-        trajectory = "../tests/files/ua.xtc",
-        analysis_type = gorder.analysis_types.UAOrder(
-            saturated = "resname POPC and name C50 C20 C13",
-            unsaturated = "resname POPC and name C24"
+        structure="../tests/files/ua.tpr",
+        trajectory="../tests/files/ua.xtc",
+        analysis_type=gorder.analysis_types.UAOrder(
+            saturated="resname POPC and name C50 C20 C13",
+            unsaturated="resname POPC and name C24",
         ),
-        ordermap = gorder.ordermap.OrderMap(bin_size = [0.5, 2.0], min_samples = 5),
-        silent = True,
-        overwrite = True,
+        ordermap=gorder.ordermap.OrderMap(bin_size=[0.5, 2.0], min_samples=5),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -1478,7 +1545,7 @@ def test_ua_order_ordermaps():
 
     molecule = results.get_molecule("POPC")
     map = molecule.average_ordermaps().total()
-    
+
     span_x = map.span_x()
     span_y = map.span_y()
     bin = map.tile_dim()
@@ -1496,14 +1563,14 @@ def test_ua_order_ordermaps():
 
     atom = molecule.get_atom(49)
     atom_map = atom.ordermaps().total()
-    
+
     assert compare_orders(atom_map.get_at(2.0, 6.0), 0.0349)
     assert compare_orders(atom_map.get_at(4.3, 0.1), -0.0160)
     assert compare_orders(atom_map.get_at(6.4, 2.2), -0.0084)
 
     bond = atom.bonds()[1]
     bond_map = bond.ordermaps().total()
-    
+
     assert compare_orders(bond_map.get_at(2.0, 6.0), 0.1869)
     assert compare_orders(bond_map.get_at(4.3, 0.1), 0.0962)
     assert compare_orders(bond_map.get_at(6.4, 2.2), 0.0358)
@@ -1511,14 +1578,14 @@ def test_ua_order_ordermaps():
     (extracted_x, extracted_y, extracted_values) = bond_map.extract()
     assert len(extracted_x) == 14
     assert len(extracted_y) == 4
-    
+
     for x in extracted_x:
-        assert math.isclose(x % 0.5, 0.0, abs_tol = 1e-5)
-    
+        assert math.isclose(x % 0.5, 0.0, abs_tol=1e-5)
+
     expected_y = [0.0, 2.0, 4.0, 6.0]
     for real, expected in zip(extracted_y, expected_y):
-        assert math.isclose(real, expected, rel_tol = 1e-5)
-    
+        assert math.isclose(real, expected, rel_tol=1e-5)
+
     for xi, x in enumerate(extracted_x):
         for yi, y in enumerate(extracted_y):
             map_val = bond_map.get_at(x, y)
@@ -1527,19 +1594,16 @@ def test_ua_order_ordermaps():
                 continue
             assert compare_orders(map_val, extracted_val)
 
+
 def test_aa_order_ordermaps_leaflets():
     analysis = gorder.Analysis(
         structure="../tests/files/pcpepg.tpr",
         trajectory="../tests/files/pcpepg.xtc",
         analysis_type=gorder.analysis_types.AAOrder(
-            "resname POPC and name C22 C24 C218",
-            "@membrane and element name hydrogen"
+            "resname POPC and name C22 C24 C218", "@membrane and element name hydrogen"
         ),
         leaflets=gorder.leaflets.GlobalClassification("@membrane", "name P"),
-        ordermap=gorder.ordermap.OrderMap(
-            bin_size=[0.1, 4.0],
-            min_samples=5
-        ),
+        ordermap=gorder.ordermap.OrderMap(bin_size=[0.1, 4.0], min_samples=5),
         silent=True,
         overwrite=True,
     )
@@ -1561,19 +1625,19 @@ def test_aa_order_ordermaps_leaflets():
     # MOLECULE
     molecule = results.get_molecule("POPC")
     mol_maps = molecule.average_ordermaps()
-    
+
     total_map = mol_maps.total()
     span_x = total_map.span_x()
     span_y = total_map.span_y()
     bin_size = total_map.tile_dim()
-    
+
     assert math.isclose(span_x[0], 0.0, rel_tol=1e-5)
     assert math.isclose(span_x[1], 9.15673, rel_tol=1e-5)
     assert math.isclose(span_y[0], 0.0, rel_tol=1e-5)
     assert math.isclose(span_y[1], 9.15673, rel_tol=1e-5)
     assert math.isclose(bin_size[0], 0.1, rel_tol=1e-5)
     assert math.isclose(bin_size[1], 4.0, rel_tol=1e-5)
-    
+
     assert compare_orders(total_map.get_at(0.6, 8.0), 0.1653)
     assert compare_orders(total_map.get_at(9.2, 4.0), 0.1990)
     upper_map = mol_maps.upper()
@@ -1600,7 +1664,7 @@ def test_aa_order_ordermaps_leaflets():
     # BOND
     bond = atom.get_bond(49)
     bond_maps = bond.ordermaps()
-    
+
     bond_total = bond_maps.total()
     assert compare_orders(bond_total.get_at(0.6, 8.0), 0.2901)
     assert math.isnan(bond_total.get_at(9.2, 4.0))
@@ -1611,16 +1675,16 @@ def test_aa_order_ordermaps_leaflets():
     assert compare_orders(bond_lower.get_at(0.6, 8.0), 0.1715)
     assert math.isnan(bond_lower.get_at(9.2, 4.0))
 
+
 def test_cg_order_ordermaps_leaflets():
     analysis = gorder.Analysis(
         structure="../tests/files/cg.tpr",
         trajectory="../tests/files/cg.xtc",
-        analysis_type=gorder.analysis_types.CGOrder("resname POPC and name C1B C2B C3B C4B"),
-        leaflets=gorder.leaflets.GlobalClassification("@membrane", "name PO4"),
-        ordermap=gorder.ordermap.OrderMap(
-            bin_size=[1.0, 1.0],
-            min_samples=10
+        analysis_type=gorder.analysis_types.CGOrder(
+            "resname POPC and name C1B C2B C3B C4B"
         ),
+        leaflets=gorder.leaflets.GlobalClassification("@membrane", "name PO4"),
+        ordermap=gorder.ordermap.OrderMap(bin_size=[1.0, 1.0], min_samples=10),
         silent=True,
         overwrite=True,
     )
@@ -1647,7 +1711,7 @@ def test_cg_order_ordermaps_leaflets():
     span_x = total_map.span_x()
     span_y = total_map.span_y()
     bin_size = total_map.tile_dim()
-    
+
     assert math.isclose(span_x[0], 0.0, rel_tol=1e-5)
     assert math.isclose(span_x[1], 12.747616, rel_tol=1e-5)
     assert math.isclose(span_y[0], 0.0, rel_tol=1e-5)
@@ -1667,7 +1731,7 @@ def test_cg_order_ordermaps_leaflets():
     # BOND
     bond = molecule.get_bond(9, 10)
     bond_maps = bond.ordermaps()
-    
+
     bond_total = bond_maps.total()
     assert compare_orders(bond_total.get_at(1.0, 8.0), 0.3967)
     assert compare_orders(bond_total.get_at(13.0, 11.0), 0.4104)
@@ -1678,18 +1742,19 @@ def test_cg_order_ordermaps_leaflets():
     assert compare_orders(bond_lower.get_at(1.0, 8.0), 0.4118)
     assert compare_orders(bond_lower.get_at(13.0, 11.0), 0.3563)
 
+
 def test_ua_order_leaflets_ordermaps():
     analysis = gorder.Analysis(
-        structure = "../tests/files/ua.tpr",
-        trajectory = "../tests/files/ua.xtc",
-        analysis_type = gorder.analysis_types.UAOrder(
-            saturated = "resname POPC and name C50 C20 C13",
-            unsaturated = "resname POPC and name C24"
+        structure="../tests/files/ua.tpr",
+        trajectory="../tests/files/ua.xtc",
+        analysis_type=gorder.analysis_types.UAOrder(
+            saturated="resname POPC and name C50 C20 C13",
+            unsaturated="resname POPC and name C24",
         ),
-        ordermap = gorder.ordermap.OrderMap(bin_size=[0.5, 2.0], min_samples=5),
-        leaflets = gorder.leaflets.GlobalClassification("@membrane", "name r'^P'"),
-        silent = True,
-        overwrite = True,
+        ordermap=gorder.ordermap.OrderMap(bin_size=[0.5, 2.0], min_samples=5),
+        leaflets=gorder.leaflets.GlobalClassification("@membrane", "name r'^P'"),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -1743,14 +1808,14 @@ def test_ua_order_leaflets_ordermaps():
     (ext_x, ext_y, ext_vals) = bond_total.extract()
     assert len(ext_x) == 14
     assert len(ext_y) == 4
-    
+
     for x in ext_x:
         assert math.isclose(x % 0.5, 0.0, abs_tol=1e-5)
-    
+
     expected_y = [0.0, 2.0, 4.0, 6.0]
     for real, expected in zip(ext_y, expected_y):
         assert math.isclose(real, expected, rel_tol=1e-5)
-    
+
     for xi, x in enumerate(ext_x):
         for yi, y in enumerate(ext_y):
             map_val = bond_total.get_at(x, y)
@@ -1759,17 +1824,19 @@ def test_ua_order_leaflets_ordermaps():
                 continue
             assert compare_orders(map_val, ext_val)
 
+
 def test_aa_order_leaflets_collect():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder(
-            "@membrane and element name carbon",
-            "@membrane and element name hydrogen"
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
         ),
-        leaflets = gorder.leaflets.GlobalClassification("@membrane", "name P", collect = True),
-        silent = True,
-        overwrite = True,
+        leaflets=gorder.leaflets.GlobalClassification(
+            "@membrane", "name P", collect=True
+        ),
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -1780,47 +1847,49 @@ def test_aa_order_leaflets_collect():
     assert len(pope_data) == 51
     for frame in pope_data:
         assert len(frame) == 131
-        for (i, lipid) in enumerate(frame):
+        for i, lipid in enumerate(frame):
             if i < 65:
                 assert lipid == 1
             else:
                 assert lipid == 0
-    
+
     popc_data = results.leaflets_data().get_molecule("POPC")
     assert len(popc_data) == 51
     for frame in popc_data:
         assert len(frame) == 128
-        for (i, lipid) in enumerate(frame):
+        for i, lipid in enumerate(frame):
             if i < 64:
                 assert lipid == 1
             else:
                 assert lipid == 0
-    
+
     popg_data = results.leaflets_data().get_molecule("POPG")
     assert len(popg_data) == 51
     for frame in popg_data:
         assert len(frame) == 15
-        for (i, lipid) in enumerate(frame):
+        for i, lipid in enumerate(frame):
             if i < 8:
                 assert lipid == 1
             else:
                 assert lipid == 0
 
+
 def test_aa_order_dynamic_normals_collect():
     analysis = gorder.Analysis(
-        structure = "../tests/files/pcpepg.tpr",
-        trajectory = "../tests/files/pcpepg.xtc",
-        analysis_type = gorder.analysis_types.AAOrder(
-            "@membrane and element name carbon",
-            "@membrane and element name hydrogen"
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
         ),
-        membrane_normal = gorder.membrane_normal.DynamicNormal(
-            "name P", 2.0, collect = True
+        membrane_normal=gorder.membrane_normal.DynamicNormal(
+            "name P", 2.0, collect=True
         ),
-        geometry = gorder.geometry.Cylinder(reference = "center", radius = 2.5, orientation = "z"),
-        step = 10,
-        silent = True,
-        overwrite = True,
+        geometry=gorder.geometry.Cylinder(
+            reference="center", radius=2.5, orientation="z"
+        ),
+        step=10,
+        silent=True,
+        overwrite=True,
     )
 
     results = analysis.run()
@@ -1835,8 +1904,7 @@ def test_aa_order_dynamic_normals_collect():
 
     assert normal_is_nan(pope_data[0][0])
     assert compare_normals(pope_data[4][2], [0.038475, 0.171717, 0.984395])
-        
-    
+
     popc_data = results.normals_data().get_molecule("POPC")
     assert len(popc_data) == 6
     for frame in popc_data:
@@ -1844,44 +1912,116 @@ def test_aa_order_dynamic_normals_collect():
 
     assert normal_is_nan(popc_data[2][-1])
     assert compare_normals(popc_data[2][4], [0.156903, 0.041018, 0.986762])
-    
+
     popg_data = results.normals_data().get_molecule("POPG")
     assert len(popg_data) == 6
     for frame in popg_data:
         assert len(frame) == 15
-    
+
     assert compare_normals(popg_data[5][-2], [0.069389, 0.018346, 0.997421])
 
+
+def test_aa_order_individual_normals_collect():
+    analysis = gorder.Analysis(
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon", "@membrane and element name hydrogen"
+        ),
+        membrane_normal=gorder.membrane_normal.IndividualNormal(
+            "name P", "name C218 C316", collect=True
+        ),
+        geometry=gorder.geometry.Cylinder(
+            reference="center", radius=2.5, orientation="z"
+        ),
+        step=10,
+        silent=True,
+        overwrite=True,
+    )
+
+    results = analysis.run()
+
+    assert results.normals_data().frames() == [1, 11, 21, 31, 41, 51]
+
+    pope_data = results.normals_data().get_molecule("POPE")
+    assert len(pope_data) == 6
+
+    for frame in pope_data:
+        assert len(frame) == 131
+
+    assert normal_is_nan(pope_data[0][0])
+    assert compare_normals(pope_data[4][2], [-0.16925713, -0.13491505, 0.9762939])
+
+    popc_data = results.normals_data().get_molecule("POPC")
+    assert len(popc_data) == 6
+    for frame in popc_data:
+        assert len(frame) == 128
+
+    assert normal_is_nan(popc_data[2][-1])
+    assert compare_normals(popc_data[2][4], [-0.1837648, -0.02940238, 0.9825304])
+
+    popg_data = results.normals_data().get_molecule("POPG")
+    assert len(popg_data) == 6
+    for frame in popg_data:
+        assert len(frame) == 15
+
+    assert compare_normals(popg_data[5][-2], [0.53822595, -0.2468107, -0.80585194])
+
+
 def test_aa_order_scrambling_leaflets_flip():
-    for (leaflets_unflipped, leaflets_flipped) in [
-        (gorder.leaflets.GlobalClassification("@membrane", "name PO4", collect = True),
-         gorder.leaflets.GlobalClassification("@membrane", "name PO4", collect = True, flip = True)),
-        (gorder.leaflets.LocalClassification("@membrane", "name PO4", 2.5, collect = True),
-         gorder.leaflets.LocalClassification("@membrane", "name PO4", 2.5, collect = True, flip = True)),
-        (gorder.leaflets.IndividualClassification("name PO4", "name C4A C4B", collect = True),
-         gorder.leaflets.IndividualClassification("name PO4", "name C4A C4B", collect = True, flip = True)),
-        (gorder.leaflets.ClusteringClassification("name PO4", frequency = gorder.Frequency.every(10), collect = True),
-         gorder.leaflets.ClusteringClassification("name PO4", frequency = gorder.Frequency.every(10), collect = True, flip = True))
+    for leaflets_unflipped, leaflets_flipped in [
+        (
+            gorder.leaflets.GlobalClassification("@membrane", "name PO4", collect=True),
+            gorder.leaflets.GlobalClassification(
+                "@membrane", "name PO4", collect=True, flip=True
+            ),
+        ),
+        (
+            gorder.leaflets.LocalClassification(
+                "@membrane", "name PO4", 2.5, collect=True
+            ),
+            gorder.leaflets.LocalClassification(
+                "@membrane", "name PO4", 2.5, collect=True, flip=True
+            ),
+        ),
+        (
+            gorder.leaflets.IndividualClassification(
+                "name PO4", "name C4A C4B", collect=True
+            ),
+            gorder.leaflets.IndividualClassification(
+                "name PO4", "name C4A C4B", collect=True, flip=True
+            ),
+        ),
+        (
+            gorder.leaflets.ClusteringClassification(
+                "name PO4", frequency=gorder.Frequency.every(10), collect=True
+            ),
+            gorder.leaflets.ClusteringClassification(
+                "name PO4",
+                frequency=gorder.Frequency.every(10),
+                collect=True,
+                flip=True,
+            ),
+        ),
     ]:
-            
         analysis_unflipped = gorder.Analysis(
-            structure = "../tests/files/cg.tpr",
-            trajectory = "../tests/files/cg.xtc",
-            analysis_type = gorder.analysis_types.CGOrder("@membrane"),
-            leaflets = leaflets_unflipped,
-            silent = True,
-            overwrite = True,
+            structure="../tests/files/cg.tpr",
+            trajectory="../tests/files/cg.xtc",
+            analysis_type=gorder.analysis_types.CGOrder("@membrane"),
+            leaflets=leaflets_unflipped,
+            silent=True,
+            overwrite=True,
         )
 
         results_unflipped = analysis_unflipped.run()
 
         analysis_flipped = gorder.Analysis(
-            structure = "../tests/files/cg.tpr",
-            trajectory = "../tests/files/cg.xtc",
-            analysis_type = gorder.analysis_types.CGOrder("@membrane"),
-            leaflets = leaflets_flipped,
-            silent = True,
-            overwrite = True,
+            structure="../tests/files/cg.tpr",
+            trajectory="../tests/files/cg.xtc",
+            analysis_type=gorder.analysis_types.CGOrder("@membrane"),
+            leaflets=leaflets_flipped,
+            silent=True,
+            overwrite=True,
         )
 
         results_flipped = analysis_flipped.run()
@@ -1892,22 +2032,35 @@ def test_aa_order_scrambling_leaflets_flip():
 
         assert len(leaflets_unflipped) == len(leaflets_flipped)
 
-        for (frame_unflipped, frame_flipped) in zip(leaflets_unflipped, leaflets_flipped):
+        for frame_unflipped, frame_flipped in zip(leaflets_unflipped, leaflets_flipped):
             assert len(frame_unflipped) == len(frame_flipped)
-            for (leaflet_unflipped, leaflet_flipped) in zip(frame_unflipped, frame_flipped):
+            for leaflet_unflipped, leaflet_flipped in zip(
+                frame_unflipped, frame_flipped
+            ):
                 assert leaflet_unflipped != leaflet_flipped
-        
+
         # compare order parameters
         order_unflipped = results_unflipped.get_molecule("POPC")
         order_flipped = results_flipped.get_molecule("POPC")
 
         assert len(order_unflipped.bonds()) == len(order_flipped.bonds())
 
-        for (bond_unflipped, bond_flipped) in zip(order_unflipped.bonds(), order_flipped.bonds()):
-            assert compare_orders(bond_unflipped.order().total().value(), bond_flipped.order().total().value())
+        for bond_unflipped, bond_flipped in zip(
+            order_unflipped.bonds(), order_flipped.bonds()
+        ):
+            assert compare_orders(
+                bond_unflipped.order().total().value(),
+                bond_flipped.order().total().value(),
+            )
             assert bond_unflipped.order().upper() is not None
             assert bond_unflipped.order().lower() is not None
             assert bond_flipped.order().upper() is not None
             assert bond_flipped.order().lower() is not None
-            assert compare_orders(bond_unflipped.order().upper().value(), bond_flipped.order().lower().value())
-            assert compare_orders(bond_unflipped.order().lower().value(), bond_flipped.order().upper().value())
+            assert compare_orders(
+                bond_unflipped.order().upper().value(),
+                bond_flipped.order().lower().value(),
+            )
+            assert compare_orders(
+                bond_unflipped.order().lower().value(),
+                bond_flipped.order().upper().value(),
+            )

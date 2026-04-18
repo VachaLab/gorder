@@ -2,6 +2,7 @@
 // Copyright (c) 2024-2026 Ladislav Bartos
 
 use gorder_core::input::DynamicNormal as RsDynamic;
+use gorder_core::input::IndividualNormal as RsIndividual;
 use gorder_core::input::MembraneNormal as RsNormal;
 use gorder_core::prelude::Vector3D;
 use hashbrown::HashMap;
@@ -30,6 +31,10 @@ impl<'source> FromPyObject<'source, '_> for MembraneNormal {
         // try to extract as DynamicNormal
         if let Ok(dyn_norm) = obj.extract::<DynamicNormal>() {
             return Ok(MembraneNormal(RsNormal::Dynamic(dyn_norm.0)));
+        }
+        // try to extract as IndividualNormal
+        if let Ok(ind_normal) = obj.extract::<IndividualNormal>() {
+            return Ok(MembraneNormal(RsNormal::Individual(ind_normal.0)));
         }
         // try to extract as a string
         if let Ok(s) = obj.extract::<String>() {
@@ -64,7 +69,7 @@ impl<'source> FromPyObject<'source, '_> for MembraneNormal {
 ///     estimation in nm. Recommended value is half the membrane thickness.
 ///     Must be greater than 0. The default value is 2.0 (nm).
 /// collect : Optional[Union[bool, str]], default=False
-///     Determines whether dynamic membrane normals are saved and exported.
+///     Determines whether membrane normals are saved and exported.
 ///     By default (`False`), normals are not saved.
 ///     If `True`, normals are saved internally and accessible via the Python API, but not written to a file.
 ///     If a string is provided, normals are saved and written to the specified output file.
@@ -91,7 +96,7 @@ impl DynamicNormal {
         ))]
         collect: Option<Bound<'a, PyAny>>,
     ) -> PyResult<Self> {
-        Ok(Self(add_collect(
+        Ok(Self(add_collect_dynamic(
             RsDynamic::new(heads, radius).map_err(|e| ConfigError::new_err(e.to_string()))?,
             collect,
         )?))
@@ -99,7 +104,63 @@ impl DynamicNormal {
 }
 
 /// Attempt to add request for data collection to dynamic membrane normals.
-fn add_collect<'a>(normals: RsDynamic, collect: Option<Bound<'a, PyAny>>) -> PyResult<RsDynamic> {
+fn add_collect_dynamic<'a>(
+    normals: RsDynamic,
+    collect: Option<Bound<'a, PyAny>>,
+) -> PyResult<RsDynamic> {
+    if let Some(collect) = collect {
+        return Ok(normals.with_collect(Collect::extract(collect.as_borrowed())?.0));
+    }
+
+    Ok(normals)
+}
+
+/// Request molecule director to be used as local membrane normal.
+///
+/// Parameters
+/// ----------
+/// heads : str
+///     Selection query specifying reference atoms representing lipid headgroups
+///     (typically phosphorus atoms or phosphate beads). Must be exactly one
+///     atom/bead per lipid molecule.
+/// methyls : str
+///     Selection query specifying reference atoms representing methyl groups at the ends of lipid tails.
+///     There should be exactly one such atom/bead per acyl chain (e.g., two for lipids with two acyl chains).
+/// collect : Optional[Union[bool, str]], default=False
+///     Determines whether membrane normals are saved and exported.
+///     By default (`False`), normals are not saved.
+///     If `True`, normals are saved internally and accessible via the Python API, but not written to a file.
+///     If a string is provided, normals are saved and written to the specified output file.
+#[gen_stub_pyclass]
+#[pyclass(module = "gorder.membrane_normal")]
+#[derive(Clone)]
+pub struct IndividualNormal(RsIndividual);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl IndividualNormal {
+    #[new]
+    #[pyo3(signature = (heads, methyls, collect = None))]
+    pub fn new<'a>(
+        heads: &str,
+        methyls: &str,
+        #[gen_stub(override_type(
+            type_repr = "typing.Optional[typing.Union[builtins.bool, builtins.str]]", imports=("typing")
+        ))]
+        collect: Option<Bound<'a, PyAny>>,
+    ) -> PyResult<Self> {
+        Ok(Self(add_collect_individual(
+            RsIndividual::new(heads, methyls),
+            collect,
+        )?))
+    }
+}
+
+/// Attempt to add request for data collection to individual membrane normals.
+fn add_collect_individual<'a>(
+    normals: RsIndividual,
+    collect: Option<Bound<'a, PyAny>>,
+) -> PyResult<RsIndividual> {
     if let Some(collect) = collect {
         return Ok(normals.with_collect(Collect::extract(collect.as_borrowed())?.0));
     }

@@ -610,6 +610,35 @@ def test_dynamic_normals():
         shutil.rmtree(temp_file_path, ignore_errors=True)
 
 
+def test_aa_order_individual_normals():
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    analysis = gorder.Analysis(
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ),
+        output_yaml=temp_file_path,
+        membrane_normal=gorder.membrane_normal.IndividualNormal(
+            "name P", "name C218 C316"
+        ),
+        silent=True,
+        overwrite=True,
+    )
+
+    analysis.run().write()
+
+    try:
+        assert diff_files_ignore_first(
+            temp_file_path, "../tests/files/aa_order_individual_normals.yaml", 1
+        ), "Files do not match!"
+    finally:
+        shutil.rmtree(temp_file_path, ignore_errors=True)
+
+
 def test_dynamic_normals_leaflets():
     manual_dict = read_leaflets_yaml(
         "../tests/files/inputs/leaflets_files/pcpepg_every.yaml"
