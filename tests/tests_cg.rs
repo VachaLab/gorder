@@ -12,7 +12,7 @@ use std::{
 };
 
 use approx::assert_relative_eq;
-use gorder::prelude::*;
+use gorder::{input::membrane_normal::IndividualNormal, prelude::*};
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 use std::io::Write;
@@ -3382,6 +3382,34 @@ fn test_cg_order_leaflets_dynamic_membrane_normal_yaml() {
         assert_eq_order(
             path_to_output,
             "tests/files/cg_order_leaflets_dynamic.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
+fn test_cg_order_individual_membrane_normal_yaml() {
+    for n_threads in [1, 3, 8, 32] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/cg.tpr")
+            .trajectory("tests/files/cg.xtc")
+            .output(path_to_output)
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .membrane_normal(IndividualNormal::new("name PO4", "name C4A C4B"))
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/cg_order_individual_normals.yaml",
             1,
         );
     }

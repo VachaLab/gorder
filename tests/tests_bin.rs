@@ -372,6 +372,27 @@ fn test_bin_cg_vesicle_dynamic() {
 }
 
 #[test]
+fn test_bin_aa_individual_normals() {
+    Command::cargo_bin("gorder")
+        .unwrap()
+        .args([
+            "tests/files/inputs/individual_membrane_normals.yaml",
+            // silent and overwrite part of the config file
+        ])
+        .assert()
+        .success()
+        .stdout("");
+
+    assert_eq_order(
+        "temp_aa_order_individual_membrane_normals.yaml",
+        "tests/files/aa_order_individual_normals.yaml",
+        1,
+    );
+
+    std::fs::remove_file("temp_aa_order_individual_membrane_normals.yaml").unwrap();
+}
+
+#[test]
 fn test_bin_ua_order_dynamic_yaml() {
     Command::cargo_bin("gorder")
         .unwrap()

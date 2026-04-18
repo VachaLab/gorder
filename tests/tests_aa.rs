@@ -12,7 +12,7 @@ use std::{
 };
 
 use approx::assert_relative_eq;
-use gorder::prelude::*;
+use gorder::{input::membrane_normal::IndividualNormal, prelude::*};
 use hashbrown::HashMap;
 use std::io::Write;
 use tempfile::{NamedTempFile, TempDir};
@@ -4858,6 +4858,37 @@ fn test_aa_order_buckled_dynamic_membrane_normal_ordermaps_yaml() {
 }
 
 #[test]
+fn test_aa_order_individual_membrane_normal_yaml() {
+    for n_threads in [1, 3, 8, 16] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/pcpepg.tpr")
+            .trajectory("tests/files/pcpepg.xtc")
+            .output(path_to_output)
+            .analysis_type(AnalysisType::aaorder(
+                "@membrane and element name carbon",
+                "@membrane and element name hydrogen",
+            ))
+            .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/aa_order_individual_normals.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
 fn test_aa_order_buckled_leaflets_clustering_yaml() {
     let output = NamedTempFile::new().unwrap();
     let path_to_output = output.path().to_str().unwrap();
@@ -4956,6 +4987,39 @@ fn test_aa_order_buckled_membrane_normals_export() {
         assert_eq_normals(
             path_to_output_normals,
             "tests/files/normals_aa_buckled_min.yaml",
+        );
+    }
+}
+
+#[test]
+fn test_aa_order_buckled_membrane_individual_normals_export() {
+    for n_threads in [1, 2, 3, 8] {
+        let output_normals = NamedTempFile::new().unwrap();
+        let path_to_output_normals = output_normals.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/aa_buckled.tpr")
+            .trajectory("tests/files/aa_buckled.xtc")
+            .analysis_type(AnalysisType::aaorder(
+                "@membrane and element name carbon",
+                "@membrane and element name hydrogen",
+            ))
+            .membrane_normal(
+                IndividualNormal::new("name P", "name C218 C316")
+                    .with_collect(path_to_output_normals),
+            )
+            .end(1630000.0)
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_normals(
+            path_to_output_normals,
+            "tests/files/individual_normals_aa_buckled_min.yaml",
         );
     }
 }
@@ -5150,6 +5214,61 @@ fn test_aa_order_fail_dynamic_undefined_leaflet_normal() {
             "@membrane and element name hydrogen",
         ))
         .membrane_normal(DynamicNormal::new("name P", 2.0).unwrap())
+        .leaflets(LeafletClassification::individual(
+            "name P",
+            "name C218 C316",
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    match analysis.run() {
+        Ok(_) => panic!("Analysis should have failed."),
+        Err(e) => assert!(e.to_string().contains("leaflet classification requires it")),
+    }
+}
+
+#[test]
+fn test_aa_order_fail_individual_undefined_ordermap_plane() {
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
+        .map(
+            OrderMap::builder()
+                .bin_size([1.0, 1.0])
+                .min_samples(5)
+                .build()
+                .unwrap(),
+        )
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    match analysis.run() {
+        Ok(_) => panic!("Analysis should have failed."),
+        Err(e) => assert!(e
+            .to_string()
+            .contains("unable to automatically set ordermap plane")),
+    }
+}
+
+#[test]
+fn test_aa_order_fail_individual_undefined_leaflet_normal() {
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
         .leaflets(LeafletClassification::individual(
             "name P",
             "name C218 C316",

@@ -418,7 +418,7 @@ impl IndividualMembraneNormal {
         Ok(normal)
     }
 
-    /// Calculate local membrane normal for the specified atom.
+    /// Calculate molecule director to be used as membrane normal for the specified atom.
     // Cold because this function gets called only once per frame and molecule, but `get_normal` gets called many times more often.
     #[cold]
     fn calculate_normal<'a>(

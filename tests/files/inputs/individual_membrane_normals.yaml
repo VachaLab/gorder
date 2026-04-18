@@ -1,0 +1,12 @@
+# Test file for binary application.
+structure: tests/files/pcpepg.tpr
+trajectory: tests/files/pcpepg.xtc
+output: "temp_aa_order_individual_membrane_normals.yaml"
+analysis_type: !AAOrder
+  heavy_atoms: "@membrane and element name carbon"
+  hydrogens: "@membrane and element name hydrogen"
+membrane_normal: !Individual
+  heads: "name P"
+  methyls: "name C218 C316"
+silent: true
+overwrite: true

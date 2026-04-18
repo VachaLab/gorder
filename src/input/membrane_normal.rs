@@ -90,6 +90,12 @@ impl From<DynamicNormal> for MembraneNormal {
     }
 }
 
+impl From<IndividualNormal> for MembraneNormal {
+    fn from(value: IndividualNormal) -> Self {
+        Self::Individual(value)
+    }
+}
+
 impl From<&str> for MembraneNormal {
     fn from(value: &str) -> Self {
         Self::FromFile(value.to_owned())
