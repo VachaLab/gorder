@@ -322,7 +322,7 @@ mod tests_clusters {
 
 #[cfg(test)]
 mod tests_clustering {
-    use rand::{rngs::StdRng, Rng, SeedableRng};
+    use rand::{rngs::StdRng, RngExt, SeedableRng};
     use rand_distr::{Distribution, Normal};
 
     use crate::analysis::pbc::PBC3D;
