@@ -58,7 +58,7 @@ impl Display for MembraneNormal {
             ),
             Self::Individual(_) => write!(
                 f,
-                "Membrane normal will be the orientation vector calculated {} for each molecule.",
+                "Membrane normal will be the director vector {} calculated for each molecule.",
                 "individually".cyan(),
             ),
             Self::FromFile(x) => {
