@@ -8,7 +8,7 @@ use std::ops::Add;
 use crate::{
     analysis::{
         calc_sch,
-        geometry::GeometrySelection,
+        geometry::GeometrySelectionType,
         leaflets::MoleculeLeafletClassification,
         normal::MoleculeMembraneNormal,
         order::{merge_option_order, AnalysisOrder},
@@ -100,12 +100,12 @@ impl OrderCalculable for OrderBonds {
     }
 
     #[inline]
-    fn analyze_frame<'a, Geom: GeometrySelection>(
+    fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         pbc_handler: &'a impl PBCHandler<'a>,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
         leaflet: &mut Option<MoleculeLeafletClassification>,
         normal: &mut MoleculeMembraneNormal,
     ) -> Result<(), AnalysisError> {
@@ -393,14 +393,14 @@ impl BondType {
     }
 
     /// Calculate the current order parameter for this bond type.
-    fn analyze_frame<'a, Geom: GeometrySelection>(
+    fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         leaflet_classification: &mut Option<MoleculeLeafletClassification>,
         pbc_handler: &'a impl PBCHandler<'a>,
         membrane_normal: &mut MoleculeMembraneNormal,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> Result<(), AnalysisError> {
         let self_ptr = self as *mut Self;
 

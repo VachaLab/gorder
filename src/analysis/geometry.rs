@@ -7,6 +7,7 @@ use groan_rs::{
     prelude::{Cylinder, NaiveShape, Rectangular, Shape, SimBox, Sphere, Vector3D},
     system::System,
 };
+use log::info;
 
 use crate::{
     errors::TopologyError,
@@ -26,6 +27,9 @@ pub(crate) enum GeometrySelectionType {
     Cuboid(CuboidAnalysis),
     Cylinder(CylinderAnalysis),
     Sphere(SphereAnalysis),
+    And(Box<GeometrySelectionType>, Box<GeometrySelectionType>),
+    Or(Box<GeometrySelectionType>, Box<GeometrySelectionType>),
+    Not(Box<GeometrySelectionType>),
 }
 
 impl Default for GeometrySelectionType {
@@ -51,7 +55,17 @@ impl GeometrySelectionType {
             Some(Geometry::Sphere(sphere)) => {
                 GeometrySelectionType::Sphere(SphereAnalysis::new(sphere, pbc_handler))
             }
-            _ => todo!("Not yet implemented."),
+            Some(Geometry::And(x, y)) => GeometrySelectionType::And(
+                Box::from(GeometrySelectionType::from_geometry(Some(x), pbc_handler)),
+                Box::from(GeometrySelectionType::from_geometry(Some(y), pbc_handler)),
+            ),
+            Some(Geometry::Or(x, y)) => GeometrySelectionType::Or(
+                Box::from(GeometrySelectionType::from_geometry(Some(x), pbc_handler)),
+                Box::from(GeometrySelectionType::from_geometry(Some(y), pbc_handler)),
+            ),
+            Some(Geometry::Not(x)) => GeometrySelectionType::Not(Box::from(
+                GeometrySelectionType::from_geometry(Some(x), pbc_handler),
+            )),
         }
     }
 
@@ -59,63 +73,100 @@ impl GeometrySelectionType {
     pub(super) fn info(&self) {
         match self {
             GeometrySelectionType::None(_) => (),
+            _ => {
+                let mut msg = String::from("Geometry selection:");
+                self.write_info(&mut msg, 1);
+                info!("{}", msg);
+            }
+        }
+    }
+
+    fn write_info(&self, msg: &mut String, depth: usize) {
+        use colored::Colorize;
+        use std::fmt::Write;
+        let indent = "  ".repeat(depth);
+        match self {
+            GeometrySelectionType::None(_) => (),
             GeometrySelectionType::Cuboid(cuboid) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  x-dimension: from {} nm to {} nm
-  y-dimension: from {} nm to {} nm
-  z-dimension: from {} nm to {} nm
-  relative to {}",
-                    if cuboid.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "cuboid",
-                    cuboid.properties.xdim()[0],
-                    cuboid.properties.xdim()[1],
-                    cuboid.properties.ydim()[0],
-                    cuboid.properties.ydim()[1],
-                    cuboid.properties.zdim()[0],
-                    cuboid.properties.zdim()[1],
-                    cuboid.properties.reference(),
-                );
+                let inside = if cuboid.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  x-dimension: from {} nm to {} nm\
+                    \n{indent}  y-dimension: from {} nm to {} nm\
+                    \n{indent}  z-dimension: from {} nm to {} nm\
+                    \n{indent}  relative to {}",
+                    inside.cyan(),
+                    "cuboid".cyan(),
+                    cuboid.properties.xdim()[0].to_string().cyan(),
+                    cuboid.properties.xdim()[1].to_string().cyan(),
+                    cuboid.properties.ydim()[0].to_string().cyan(),
+                    cuboid.properties.ydim()[1].to_string().cyan(),
+                    cuboid.properties.zdim()[0].to_string().cyan(),
+                    cuboid.properties.zdim()[1].to_string().cyan(),
+                    cuboid.properties.reference().to_string().cyan(),
+                )
+                .expect(PANIC_MESSAGE);
             }
             GeometrySelectionType::Cylinder(cylinder) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  radius: {} nm
-  oriented along the {} axis
-  going from {} nm to {} nm along the {} axis
-  relative to {}",
-                    if cylinder.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "cylinder",
-                    cylinder.properties.radius(),
-                    cylinder.properties.orientation(),
-                    cylinder.properties.span()[0],
-                    cylinder.properties.span()[1],
-                    cylinder.properties.orientation(),
-                    cylinder.properties.reference()
+                let inside = if cylinder.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  radius: {} nm\
+                    \n{indent}  oriented along the {} axis\
+                    \n{indent}  going from {} nm to {} nm along the {} axis\
+                    \n{indent}  relative to {}",
+                    inside.cyan(),
+                    "cylinder".cyan(),
+                    cylinder.properties.radius().to_string().cyan(),
+                    cylinder.properties.orientation().to_string().cyan(),
+                    cylinder.properties.span()[0].to_string().cyan(),
+                    cylinder.properties.span()[1].to_string().cyan(),
+                    cylinder.properties.orientation().to_string().cyan(),
+                    cylinder.properties.reference().to_string().cyan(),
                 )
+                .expect(PANIC_MESSAGE);
             }
             GeometrySelectionType::Sphere(sphere) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  radius: {} nm
-  center: {}",
-                    if sphere.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "sphere",
-                    sphere.properties.radius(),
-                    sphere.properties.reference()
+                let inside = if sphere.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  radius: {} nm\
+                    \n{indent}  center: {}",
+                    inside.cyan(),
+                    "sphere".cyan(),
+                    sphere.properties.radius().to_string().cyan(),
+                    sphere.properties.reference().to_string().cyan(),
                 )
+                .expect(PANIC_MESSAGE);
+            }
+            GeometrySelectionType::And(x, y) => {
+                write!(msg, "\n{indent}{} of the following:", "all".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
+                y.write_info(msg, depth + 1);
+            }
+            GeometrySelectionType::Or(x, y) => {
+                write!(msg, "\n{indent}{} of the following:", "any".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
+                y.write_info(msg, depth + 1);
+            }
+            GeometrySelectionType::Not(x) => {
+                write!(msg, "\n{indent}{}:", "not".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
             }
         }
     }
@@ -132,6 +183,13 @@ impl GeometrySelectionType {
             GeometrySelectionType::Cuboid(x) => x.init_reference(system, pbc_handler),
             GeometrySelectionType::Cylinder(x) => x.init_reference(system, pbc_handler),
             GeometrySelectionType::Sphere(x) => x.init_reference(system, pbc_handler),
+            GeometrySelectionType::And(x, y) | GeometrySelectionType::Or(x, y) => {
+                x.init_new_frame(system, pbc_handler);
+                y.init_new_frame(system, pbc_handler);
+            }
+            GeometrySelectionType::Not(x) => {
+                x.init_new_frame(system, pbc_handler);
+            }
         }
     }
 }

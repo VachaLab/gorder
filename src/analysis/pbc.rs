@@ -13,7 +13,7 @@ use groan_rs::{
 };
 use once_cell::sync::OnceCell;
 
-use crate::{errors::AnalysisError, PANIC_MESSAGE};
+use crate::{analysis::geometry::GeometrySelectionType, errors::AnalysisError, PANIC_MESSAGE};
 
 use super::{common::macros::group_name, geometry::GeometrySelection};
 
@@ -51,8 +51,8 @@ pub(crate) trait PBCHandler<'a> {
         dim: Dimension,
     ) -> Result<f32, AtomError>;
 
-    /// Check if a point is inside a geometric shape.
-    fn inside<Geom: GeometrySelection>(&self, point: &Vector3D, shape: &Geom) -> bool;
+    /// Check if a point is inside a geometric selection.
+    fn inside(&self, point: &Vector3D, geometry: &GeometrySelectionType) -> bool;
 
     /// Calculate shortest vector connecting point1 with point2.
     fn vector_to(&self, point1: &Vector3D, point2: &Vector3D) -> Vector3D;
@@ -180,8 +180,16 @@ impl<'a> PBCHandler<'a> for NoPBC {
     }
 
     #[inline(always)]
-    fn inside<Geom: GeometrySelection>(&self, point: &Vector3D, shape: &Geom) -> bool {
-        shape.inside_naive(point)
+    fn inside(&self, point: &Vector3D, geometry: &GeometrySelectionType) -> bool {
+        match geometry {
+            GeometrySelectionType::None(_) => true,
+            GeometrySelectionType::Cuboid(x) => x.inside_naive(point),
+            GeometrySelectionType::Cylinder(x) => x.inside_naive(point),
+            GeometrySelectionType::Sphere(x) => x.inside_naive(point),
+            GeometrySelectionType::And(x, y) => self.inside(point, x) && self.inside(point, y),
+            GeometrySelectionType::Or(x, y) => self.inside(point, x) || self.inside(point, y),
+            GeometrySelectionType::Not(x) => !self.inside(point, x),
+        }
     }
 
     #[inline(always)]
@@ -370,8 +378,16 @@ impl<'a> PBCHandler<'a> for PBC3D<'a> {
     }
 
     #[inline(always)]
-    fn inside<Geom: GeometrySelection>(&self, point: &Vector3D, shape: &Geom) -> bool {
-        shape.inside(point, self.simbox)
+    fn inside(&self, point: &Vector3D, geometry: &GeometrySelectionType) -> bool {
+        match geometry {
+            GeometrySelectionType::None(_) => true,
+            GeometrySelectionType::Cuboid(x) => x.inside(point, self.simbox),
+            GeometrySelectionType::Cylinder(x) => x.inside(point, self.simbox),
+            GeometrySelectionType::Sphere(x) => x.inside(point, self.simbox),
+            GeometrySelectionType::And(x, y) => self.inside(point, x) && self.inside(point, y),
+            GeometrySelectionType::Or(x, y) => self.inside(point, x) || self.inside(point, y),
+            GeometrySelectionType::Not(x) => !self.inside(point, x),
+        }
     }
 
     #[inline(always)]

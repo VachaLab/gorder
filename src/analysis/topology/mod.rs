@@ -8,7 +8,7 @@ use crate::input::{Analysis, EstimateError, LeafletClassification, OrderMap};
 use crate::PANIC_MESSAGE;
 
 use super::clustering::SystemClusterClassification;
-use super::geometry::{GeometrySelection, GeometrySelectionType};
+use super::geometry::GeometrySelectionType;
 use super::leaflets::{
     MoleculeLeafletClassification, SystemLeafletClassification, SystemLeafletClassificationType,
 };
@@ -300,12 +300,12 @@ pub(crate) trait OrderCalculable: Sized + Add<Output = Self> {
     fn insert(&mut self, min_index: usize);
 
     /// Perform the analysis for a single frame.
-    fn analyze_frame<'a, Geom: GeometrySelection>(
+    fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         pbc_handler: &'a impl PBCHandler<'a>,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
         leaflet: &mut Option<MoleculeLeafletClassification>,
         normal: &mut MoleculeMembraneNormal,
     ) -> Result<(), AnalysisError>;

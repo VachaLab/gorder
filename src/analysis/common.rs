@@ -160,14 +160,28 @@ pub(super) fn prepare_geometry_selection(
         }
     };
 
+    prepare_system_for_geometry(&geom, system)?;
+
+    Ok(geom)
+}
+
+fn prepare_system_for_geometry(
+    geom: &GeometrySelectionType,
+    system: &mut System,
+) -> Result<(), TopologyError> {
     match &geom {
         GeometrySelectionType::None(_) => (),
         GeometrySelectionType::Cuboid(x) => x.prepare_system(system)?,
         GeometrySelectionType::Cylinder(x) => x.prepare_system(system)?,
         GeometrySelectionType::Sphere(x) => x.prepare_system(system)?,
+        GeometrySelectionType::And(x, y) | GeometrySelectionType::Or(x, y) => {
+            prepare_system_for_geometry(x, system)?;
+            prepare_system_for_geometry(y, system)?;
+        }
+        GeometrySelectionType::Not(x) => prepare_system_for_geometry(x, system)?,
     }
 
-    Ok(geom)
+    Ok(())
 }
 
 /// Prepare the system for dynamic membrane normal calculation, if this is needed.

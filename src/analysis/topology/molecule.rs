@@ -11,8 +11,7 @@ use hashbrown::HashSet;
 
 use super::{
     super::{
-        geometry::GeometrySelection, leaflets::MoleculeLeafletClassification,
-        normal::MoleculeMembraneNormal, pbc::PBCHandler,
+        leaflets::MoleculeLeafletClassification, normal::MoleculeMembraneNormal, pbc::PBCHandler,
     },
     atom::OrderAtoms,
     bond::{BondTopology, OrderBonds},
@@ -71,20 +70,8 @@ impl MoleculeTypes {
                 }
 
                 // calculate order parameters
-                match topology.geometry() {
-                    GeometrySelectionType::None(x) => {
-                        molecule.analyze_frame(frame, pbc_handler, frame_index, x)?
-                    }
-                    GeometrySelectionType::Cuboid(x) => {
-                        molecule.analyze_frame(frame, pbc_handler, frame_index, x)?
-                    }
-                    GeometrySelectionType::Cylinder(x) => {
-                        molecule.analyze_frame(frame, pbc_handler, frame_index, x)?
-                    }
-                    GeometrySelectionType::Sphere(x) => {
-                        molecule.analyze_frame(frame, pbc_handler, frame_index, x)?
-                    }
-                }
+                molecule.analyze_frame(frame, pbc_handler, frame_index, topology.geometry())?;
+
 
                 // store dynamic membrane normals, if requested
                 molecule.membrane_normal_mut().store_normals();
@@ -282,12 +269,12 @@ impl MoleculeType<OrderBonds> {
 
     /// Calculate order parameters for bonds of a single molecule type from a single simulation frame.
     #[inline(always)]
-    pub(crate) fn analyze_frame<'a, Geom: GeometrySelection>(
+    pub(crate) fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         pbc_handler: &'a impl PBCHandler<'a>,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> Result<(), AnalysisError> {
         self.order_structure.analyze_frame(
             frame,
@@ -337,12 +324,12 @@ impl MoleculeType<UAOrderAtoms> {
 
     /// Calculate order parameters for atoms of a single molecule type from a single simulation frame.
     #[inline(always)]
-    pub(super) fn analyze_frame<'a, Geom: GeometrySelection>(
+    pub(super) fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         pbc_handler: &'a impl PBCHandler<'a>,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> Result<(), AnalysisError> {
         self.order_structure.analyze_frame(
             frame,

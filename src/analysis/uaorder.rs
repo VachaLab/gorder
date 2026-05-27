@@ -9,12 +9,13 @@ use std::{f32::consts::PI, ops::Deref};
 use super::common::macros::group_name;
 use super::common::GORDER_GROUP_PREFIX;
 use super::{
-    calc_sch, geometry::GeometrySelection, leaflets::MoleculeLeafletClassification,
-    normal::MoleculeMembraneNormal, pbc::PBCHandler, topology::bond::VirtualBondType,
+    calc_sch, leaflets::MoleculeLeafletClassification, normal::MoleculeMembraneNormal,
+    pbc::PBCHandler, topology::bond::VirtualBondType,
 };
 use crate::analysis::common::{
     prepare_geometry_selection, prepare_membrane_normal_calculation, read_trajectory,
 };
+use crate::analysis::geometry::GeometrySelectionType;
 use crate::analysis::index::read_ndx_file;
 use crate::analysis::pbc::{NoPBC, PBC3D};
 use crate::analysis::structure;
@@ -242,14 +243,14 @@ pub(crate) enum UAOrderAtomType {
 
 impl UAOrderAtomType {
     /// Analyze order parameters for this atom type.
-    pub(crate) fn analyze_frame<'a, Geom: GeometrySelection>(
+    pub(crate) fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         leaflet_classification: &mut Option<MoleculeLeafletClassification>,
         pbc_handler: &'a impl PBCHandler<'a>,
         membrane_normal: &mut MoleculeMembraneNormal,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> Result<(), AnalysisError> {
         macro_rules! impl_analyze_frame {
             ($enum:ident => $($variant:ident),+) => {
@@ -372,12 +373,12 @@ trait UAAtom<const HYDROGENS: usize, const INDICES: usize> {
 
     /// Use the predicted hydrogen positions to calculate order parameters and bond positions.
     /// If a bond is not inside the specified geometry, return `None` for it.
-    fn calculate_sch<'a, Geom: GeometrySelection>(
+    fn calculate_sch<'a>(
         target: &Vector3D,
         hydrogens: [Vector3D; HYDROGENS],
         pbc: &'a impl PBCHandler<'a>,
         normal: &Vector3D,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> ([Option<f32>; HYDROGENS], [Vector3D; HYDROGENS]) {
         let results: [(Option<f32>, Vector3D); HYDROGENS] = std::array::from_fn(|i| {
             let hydrogen = &hydrogens[i];
@@ -397,14 +398,14 @@ trait UAAtom<const HYDROGENS: usize, const INDICES: usize> {
     }
 
     /// Calculate order parameters for a single atom type in a single trajectory frame.
-    fn analyze_frame<'a, Geom: GeometrySelection>(
+    fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         leaflet_classification: &mut Option<MoleculeLeafletClassification>,
         pbc_handler: &'a impl PBCHandler<'a>,
         membrane_normal: &mut MoleculeMembraneNormal,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
     ) -> Result<(), AnalysisError> {
         let self_ptr = self as *mut Self;
 
@@ -587,7 +588,7 @@ impl UAOrderAtomType {
             .collect::<Vec<usize>>();
 
         if bonded_atoms.len() > 4 {
-            colog_warn!("Atom number {} is bonded to {} atoms which is more than the expected maximum of {} atoms.", 
+            colog_warn!("Atom number {} is bonded to {} atoms which is more than the expected maximum of {} atoms.",
                 atom.get_index() + 1, bonded_atoms.len(), 4);
         }
 
@@ -619,7 +620,7 @@ impl UAOrderAtomType {
                     Some(x) => x,
                     None => {
                         colog_warn!(
-                            "Atom {} of residue {} was identified as being a {} carbon. However, it is in an isolated chain of {} carbons and hydrogens therefore cannot be predicted for it. Ignoring.", 
+                            "Atom {} of residue {} was identified as being a {} carbon. However, it is in an isolated chain of {} carbons and hydrogens therefore cannot be predicted for it. Ignoring.",
                             atom.get_atom_name(), atom.get_residue_name(), "methyl", 2);
                         return None;
                     }
@@ -678,7 +679,7 @@ impl UAOrderAtomType {
             (true, false) => CarbonKind::Saturated,
             (false, true) => CarbonKind::Unsaturated,
             (true, true) => panic!(
-                "FATAL GORDER ERROR | UAOrderAtomType::classify_carbon | Atom `{}` is both satured and unsatured but this should have been handled before. {}", 
+                "FATAL GORDER ERROR | UAOrderAtomType::classify_carbon | Atom `{}` is both satured and unsatured but this should have been handled before. {}",
                 index, PANIC_MESSAGE),
             (false, false) => panic!(
                 "FATAL GORDER ERROR | UAOrderAtomType::classify_carbon | Atom `{}` is neither saturated nor unsaturated. How did it get here? {}",
