@@ -15,8 +15,7 @@ use crate::errors::GeometryConfigError;
 use super::Axis;
 
 /// Specification of the geometric shape in which bonds should be positioned to be considered.
-#[derive(Debug, Clone, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone)]
 pub enum Geometry {
     Cuboid(CuboidSelection),
     Cylinder(CylinderSelection),
@@ -237,6 +236,40 @@ impl<'de> Deserialize<'de> for Geometry {
             other => Err(serde::de::Error::custom(format!(
                 "unknown Geometry variant: {other}"
             ))),
+        }
+    }
+}
+
+impl Serialize for Geometry {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeTupleVariant;
+
+        match self {
+            Geometry::Cuboid(x) => serializer.serialize_newtype_variant("Geometry", 0, "Cuboid", x),
+            Geometry::Cylinder(x) => {
+                serializer.serialize_newtype_variant("Geometry", 1, "Cylinder", x)
+            }
+            Geometry::Sphere(x) => serializer.serialize_newtype_variant("Geometry", 2, "Sphere", x),
+            Geometry::And(a, b) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 3, "And", 2)?;
+                tv.serialize_field(a)?;
+                tv.serialize_field(b)?;
+                tv.end()
+            }
+            Geometry::Or(a, b) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 4, "Or", 2)?;
+                tv.serialize_field(a)?;
+                tv.serialize_field(b)?;
+                tv.end()
+            }
+            Geometry::Not(x) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 5, "Not", 1)?;
+                tv.serialize_field(x)?;
+                tv.end()
+            }
         }
     }
 }
@@ -1021,6 +1054,138 @@ mod pass_tests {
                 }
             }
             _ => panic!("Expected And geometry."),
+        }
+    }
+
+    /// Serialize then deserialize a Geometry and check the structure matches.
+    fn round_trip(geom: &Geometry) -> Geometry {
+        let yaml = serde_yaml::to_string(geom).expect("failed to serialize");
+        serde_yaml::from_str(&yaml).expect("failed to deserialize")
+    }
+
+    #[test]
+    fn round_trip_cuboid() {
+        let geom =
+            Geometry::cuboid([1.0, 2.0, 3.0], [-1.0, 1.0], [-2.0, 2.0], [-3.0, 3.0]).unwrap();
+        match round_trip(&geom) {
+            Geometry::Cuboid(c) => {
+                assert_relative_eq!(c.xdim[0], -1.0);
+                assert_relative_eq!(c.xdim[1], 1.0);
+                assert_relative_eq!(c.ydim[0], -2.0);
+                assert_relative_eq!(c.ydim[1], 2.0);
+                assert_relative_eq!(c.zdim[0], -3.0);
+                assert_relative_eq!(c.zdim[1], 3.0);
+            }
+            _ => panic!("Expected Cuboid after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_sphere() {
+        let geom = Geometry::sphere([0.0, 0.0, 0.0], 5.0).unwrap();
+        match round_trip(&geom) {
+            Geometry::Sphere(s) => {
+                assert_relative_eq!(s.radius, 5.0);
+            }
+            _ => panic!("Expected Sphere after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_not() {
+        let inner = Geometry::sphere([1.0, 2.0, 3.0], 2.5).unwrap();
+        let geom = Geometry::not(inner);
+        match round_trip(&geom) {
+            Geometry::Not(inner) => match *inner {
+                Geometry::Sphere(s) => {
+                    assert_relative_eq!(s.radius, 2.5);
+                    match s.reference {
+                        GeomReference::Point(p) => {
+                            assert_relative_eq!(p.x, 1.0);
+                            assert_relative_eq!(p.y, 2.0);
+                            assert_relative_eq!(p.z, 3.0);
+                        }
+                        _ => panic!("Expected Point reference"),
+                    }
+                }
+                _ => panic!("Expected Sphere inside Not"),
+            },
+            _ => panic!("Expected Not after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_and() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 1.0).unwrap();
+        let b = Geometry::sphere([1.0, 1.0, 1.0], 2.0).unwrap();
+        let geom = Geometry::and(a, b);
+        match round_trip(&geom) {
+            Geometry::And(a, b) => {
+                match *a {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 1.0),
+                    _ => panic!("Expected Sphere as first operand"),
+                }
+                match *b {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 2.0),
+                    _ => panic!("Expected Sphere as second operand"),
+                }
+            }
+            _ => panic!("Expected And after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_or() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 3.0).unwrap();
+        let b = Geometry::sphere([0.0, 0.0, 0.0], 4.0).unwrap();
+        let geom = Geometry::or(a, b);
+        match round_trip(&geom) {
+            Geometry::Or(a, b) => {
+                match *a {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 3.0),
+                    _ => panic!("Expected Sphere as first operand"),
+                }
+                match *b {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 4.0),
+                    _ => panic!("Expected Sphere as second operand"),
+                }
+            }
+            _ => panic!("Expected Or after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_nested() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 1.0).unwrap();
+        let b = Geometry::sphere([0.0, 0.0, 0.0], 2.0).unwrap();
+        let c = Geometry::sphere([0.0, 0.0, 0.0], 3.0).unwrap();
+        // Not(And(a, Or(b, c)))
+        let geom = Geometry::not(Geometry::and(a, Geometry::or(b, c)));
+
+        match round_trip(&geom) {
+            Geometry::Not(inner) => match *inner {
+                Geometry::And(left, right) => {
+                    match *left {
+                        Geometry::Sphere(s) => assert_relative_eq!(s.radius, 1.0),
+                        _ => panic!("Expected Sphere"),
+                    }
+                    match *right {
+                        Geometry::Or(a, b) => {
+                            match *a {
+                                Geometry::Sphere(s) => assert_relative_eq!(s.radius, 2.0),
+                                _ => panic!("Expected Sphere"),
+                            }
+                            match *b {
+                                Geometry::Sphere(s) => assert_relative_eq!(s.radius, 3.0),
+                                _ => panic!("Expected Sphere"),
+                            }
+                        }
+                        _ => panic!("Expected Or"),
+                    }
+                }
+                _ => panic!("Expected And inside Not"),
+            },
+            _ => panic!("Expected Not after round-trip"),
         }
     }
 }
