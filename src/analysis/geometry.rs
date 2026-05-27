@@ -51,6 +51,7 @@ impl GeometrySelectionType {
             Some(Geometry::Sphere(sphere)) => {
                 GeometrySelectionType::Sphere(SphereAnalysis::new(sphere, pbc_handler))
             }
+            _ => todo!("Not yet implemented."),
         }
     }
 
@@ -84,7 +85,7 @@ impl GeometrySelectionType {
                 colog_info!(
                     "Will only consider bonds located {} a {}:
   radius: {} nm
-  oriented along the {} axis 
+  oriented along the {} axis
   going from {} nm to {} nm along the {} axis
   relative to {}",
                     if cylinder.properties.invert() {

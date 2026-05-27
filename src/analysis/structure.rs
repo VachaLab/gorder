@@ -231,9 +231,7 @@ fn should_guess_elements(analysis: &Analysis) -> bool {
         Some(LeafletClassification::Clustering(x)) => has_element(x.heads()),
         Some(LeafletClassification::SphericalClustering(x)) => has_element(x.heads()),
     } || match analysis.geometry() {
-        Some(Geometry::Cuboid(x)) => reference_has_element(x.reference()),
-        Some(Geometry::Cylinder(x)) => reference_has_element(x.reference()),
-        Some(Geometry::Sphere(x)) => reference_has_element(x.reference()),
+        Some(x) => geometry_has_element(x),
         None => false,
     } || match analysis.membrane_normal() {
         MembraneNormal::Static(_) | MembraneNormal::FromFile(_) | MembraneNormal::FromMap(_) => {
@@ -246,6 +244,18 @@ fn should_guess_elements(analysis: &Analysis) -> bool {
     };
 
     guess
+}
+
+/// Should the geometry have elements guessed?
+fn geometry_has_element(geom: &Geometry) -> bool {
+    match geom {
+        Geometry::Cuboid(x) => reference_has_element(x.reference()),
+        Geometry::Cylinder(x) => reference_has_element(x.reference()),
+        Geometry::Sphere(x) => reference_has_element(x.reference()),
+        Geometry::And(x, y) => geometry_has_element(x) || geometry_has_element(y),
+        Geometry::Or(x, y) => geometry_has_element(x) || geometry_has_element(y),
+        Geometry::Not(x) => geometry_has_element(x),
+    }
 }
 
 /// Guess elements if this is requested in an input query.
@@ -540,6 +550,45 @@ mod tests {
             .trajectory("system.xtc")
             .analysis_type(AnalysisType::cgorder("@membrane"))
             .geometry(Geometry::sphere("elname oxygen", 3.0).unwrap())
+            .build()
+            .unwrap();
+
+        assert!(should_guess_elements(&analysis));
+
+        let analysis = Analysis::builder()
+            .structure("system.gro")
+            .trajectory("system.xtc")
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .geometry(Geometry::and(
+                Geometry::sphere("resname POPC", 3.0).unwrap(),
+                Geometry::cylinder("elname oxygen", 3.0, [-5.0, 5.0], Axis::Z).unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(should_guess_elements(&analysis));
+
+        let analysis = Analysis::builder()
+            .structure("system.gro")
+            .trajectory("system.xtc")
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .geometry(Geometry::or(
+                Geometry::sphere("element symbol O", 3.0).unwrap(),
+                Geometry::cylinder("resname POPC", 3.0, [-5.0, 5.0], Axis::Z).unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(should_guess_elements(&analysis));
+
+        let analysis = Analysis::builder()
+            .structure("system.gro")
+            .trajectory("system.xtc")
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .geometry(Geometry::not(
+                Geometry::cuboid("element name oxygen", [0.0, 10.0], [2.0, 5.0], [1.0, 8.0])
+                    .unwrap(),
+            ))
             .build()
             .unwrap();
 
