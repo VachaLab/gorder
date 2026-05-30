@@ -527,6 +527,27 @@ fn test_bin_aa_clustering() {
 }
 
 #[test]
+fn test_bin_aa_composite_geometry() {
+    Command::cargo_bin("gorder")
+        .unwrap()
+        .args([
+            "tests/files/inputs/composite_geometry_aa.yaml",
+            // silent and overwrite are part of the yaml file
+        ])
+        .assert()
+        .success()
+        .stdout("");
+
+    assert_eq_order(
+        "temp_aa_order_composite_geometry.yaml",
+        "tests/files/aa_order_composite_geometry_complex.yaml",
+        1,
+    );
+
+    std::fs::remove_file("temp_aa_order_composite_geometry.yaml").unwrap();
+}
+
+#[test]
 fn test_bin_cg_leaflets_fail_nonexistent_traj() {
     Command::cargo_bin("gorder")
         .unwrap()
