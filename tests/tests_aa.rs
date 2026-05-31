@@ -3774,6 +3774,48 @@ fn test_aa_order_composite_geometry_complex() {
 }
 
 #[test]
+fn test_aa_order_composite_geometry_complex_with_dynamic_references() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::or(
+                Geometry::sphere("resid 143", 5.0).unwrap(),
+                Geometry::cylinder("resid 144", 5.0, [-3.0, 2.0], Axis::X).unwrap(),
+            ),
+            Geometry::not(
+                Geometry::cuboid(
+                    "resid 145",
+                    [-2.0, 2.0],
+                    [-2.0, 2.0],
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                )
+                .unwrap(),
+            ),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_composite_geometry_complex_with_dynamic_references.yaml",
+        1,
+    );
+}
+
+#[test]
 fn test_aa_order_composite_geometry_not_inverted() {
     let output = NamedTempFile::new().unwrap();
     let path_to_output = output.path().to_str().unwrap();

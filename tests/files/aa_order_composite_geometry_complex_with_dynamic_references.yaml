@@ -1,0 +1,818 @@
+# Order parameters calculated with 'gorder v1.5.0-dev.1' using a structure file 'tests/files/pcpepg.tpr' and a trajectory file 'tests/files/pcpepg.xtc'.
+average order:
+  total: 0.142
+POPE:
+  average order:
+    total: 0.1463
+  order parameters:
+    POPE C12 (4):
+      total: -0.0123
+      bonds:
+        POPE H12A (5):
+          total: 0.0052
+        POPE H12B (6):
+          total: -0.0297
+    POPE C11 (7):
+      total: -0.075
+      bonds:
+        POPE H11A (8):
+          total: -0.1172
+        POPE H11B (9):
+          total: -0.0328
+    POPE C1 (15):
+      total: 0.2162
+      bonds:
+        POPE HA (16):
+          total: 0.1974
+        POPE HB (17):
+          total: 0.235
+    POPE C2 (18):
+      total: 0.2141
+      bonds:
+        POPE HS (19):
+          total: 0.2141
+    POPE C22 (23):
+      total: 0.1063
+      bonds:
+        POPE H2R (24):
+          total: 0.0907
+        POPE H2S (25):
+          total: 0.1219
+    POPE C3 (26):
+      total: 0.0903
+      bonds:
+        POPE HX (27):
+          total: 0.1698
+        POPE HY (28):
+          total: 0.011
+    POPE C32 (32):
+      total: 0.2176
+      bonds:
+        POPE H2X (33):
+          total: 0.2373
+        POPE H2Y (34):
+          total: 0.1979
+    POPE C23 (35):
+      total: 0.1966
+      bonds:
+        POPE H3R (36):
+          total: 0.1924
+        POPE H3S (37):
+          total: 0.2008
+    POPE C24 (38):
+      total: 0.2122
+      bonds:
+        POPE H4R (39):
+          total: 0.2088
+        POPE H4S (40):
+          total: 0.2156
+    POPE C25 (41):
+      total: 0.2277
+      bonds:
+        POPE H5R (42):
+          total: 0.2232
+        POPE H5S (43):
+          total: 0.2323
+    POPE C26 (44):
+      total: 0.1956
+      bonds:
+        POPE H6R (45):
+          total: 0.2
+        POPE H6S (46):
+          total: 0.1913
+    POPE C27 (47):
+      total: 0.1889
+      bonds:
+        POPE H7R (48):
+          total: 0.1911
+        POPE H7S (49):
+          total: 0.1867
+    POPE C28 (50):
+      total: 0.1122
+      bonds:
+        POPE H8R (51):
+          total: 0.1099
+        POPE H8S (52):
+          total: 0.1146
+    POPE C29 (53):
+      total: 0.0565
+      bonds:
+        POPE H91 (54):
+          total: 0.0565
+    POPE C210 (55):
+      total: 0.0363
+      bonds:
+        POPE H101 (56):
+          total: 0.0363
+    POPE C211 (57):
+      total: 0.0865
+      bonds:
+        POPE H11R (58):
+          total: 0.0771
+        POPE H11S (59):
+          total: 0.0961
+    POPE C212 (60):
+      total: 0.1303
+      bonds:
+        POPE H12R (61):
+          total: 0.137
+        POPE H12S (62):
+          total: 0.1235
+    POPE C213 (63):
+      total: 0.1378
+      bonds:
+        POPE H13R (64):
+          total: 0.1392
+        POPE H13S (65):
+          total: 0.1363
+    POPE C214 (66):
+      total: 0.1447
+      bonds:
+        POPE H14R (67):
+          total: 0.1425
+        POPE H14S (68):
+          total: 0.147
+    POPE C215 (69):
+      total: 0.137
+      bonds:
+        POPE H15R (70):
+          total: 0.1366
+        POPE H15S (71):
+          total: 0.1374
+    POPE C216 (72):
+      total: 0.1256
+      bonds:
+        POPE H16R (73):
+          total: 0.1197
+        POPE H16S (74):
+          total: 0.1316
+    POPE C217 (75):
+      total: 0.0951
+      bonds:
+        POPE H17R (76):
+          total: 0.0916
+        POPE H17S (77):
+          total: 0.0986
+    POPE C218 (78):
+      total: 0.0307
+      bonds:
+        POPE H18R (79):
+          total: 0.0443
+        POPE H18S (80):
+          total: 0.0204
+        POPE H18T (81):
+          total: 0.0275
+    POPE C33 (82):
+      total: 0.1822
+      bonds:
+        POPE H3X (83):
+          total: 0.1907
+        POPE H3Y (84):
+          total: 0.1736
+    POPE C34 (85):
+      total: 0.2161
+      bonds:
+        POPE H4X (86):
+          total: 0.2208
+        POPE H4Y (87):
+          total: 0.2113
+    POPE C35 (88):
+      total: 0.2234
+      bonds:
+        POPE H5X (89):
+          total: 0.2305
+        POPE H5Y (90):
+          total: 0.2164
+    POPE C36 (91):
+      total: 0.2395
+      bonds:
+        POPE H6X (92):
+          total: 0.2414
+        POPE H6Y (93):
+          total: 0.2376
+    POPE C37 (94):
+      total: 0.2328
+      bonds:
+        POPE H7X (95):
+          total: 0.2267
+        POPE H7Y (96):
+          total: 0.2388
+    POPE C38 (97):
+      total: 0.2352
+      bonds:
+        POPE H8X (98):
+          total: 0.235
+        POPE H8Y (99):
+          total: 0.2355
+    POPE C39 (100):
+      total: 0.2236
+      bonds:
+        POPE H9X (101):
+          total: 0.2163
+        POPE H9Y (102):
+          total: 0.2309
+    POPE C310 (103):
+      total: 0.2146
+      bonds:
+        POPE H10X (104):
+          total: 0.2101
+        POPE H10Y (105):
+          total: 0.2191
+    POPE C311 (106):
+      total: 0.1963
+      bonds:
+        POPE H11X (107):
+          total: 0.1873
+        POPE H11Y (108):
+          total: 0.2053
+    POPE C312 (109):
+      total: 0.1797
+      bonds:
+        POPE H12X (110):
+          total: 0.1799
+        POPE H12Y (111):
+          total: 0.1794
+    POPE C313 (112):
+      total: 0.1586
+      bonds:
+        POPE H13X (113):
+          total: 0.1642
+        POPE H13Y (114):
+          total: 0.153
+    POPE C314 (115):
+      total: 0.1345
+      bonds:
+        POPE H14X (116):
+          total: 0.1389
+        POPE H14Y (117):
+          total: 0.1301
+    POPE C315 (118):
+      total: 0.0958
+      bonds:
+        POPE H15X (119):
+          total: 0.0876
+        POPE H15Y (120):
+          total: 0.1039
+    POPE C316 (121):
+      total: 0.0283
+      bonds:
+        POPE H16X (122):
+          total: 0.0296
+        POPE H16Y (123):
+          total: 0.0244
+        POPE H16Z (124):
+          total: 0.0308
+POPC:
+  average order:
+    total: 0.1378
+  order parameters:
+    POPC C12 (1):
+      total: 0.0941
+      bonds:
+        POPC H12A (2):
+          total: 0.1106
+        POPC H12B (3):
+          total: 0.0776
+    POPC C13 (4):
+      total: -0.0108
+      bonds:
+        POPC H13A (5):
+          total: -0.0176
+        POPC H13B (6):
+          total: -0.0169
+        POPC H13C (7):
+          total: 0.0021
+    POPC C14 (8):
+      total: -0.0168
+      bonds:
+        POPC H14A (9):
+          total: -0.0184
+        POPC H14B (10):
+          total: 0.006
+        POPC H14C (11):
+          total: -0.038
+    POPC C15 (12):
+      total: -0.0176
+      bonds:
+        POPC H15A (13):
+          total: -0.0059
+        POPC H15B (14):
+          total: -0.0172
+        POPC H15C (15):
+          total: -0.0296
+    POPC C11 (16):
+      total: -0.0393
+      bonds:
+        POPC H11A (17):
+          total: -0.0622
+        POPC H11B (18):
+          total: -0.0164
+    POPC C1 (24):
+      total: 0.2328
+      bonds:
+        POPC HA (25):
+          total: 0.2392
+        POPC HB (26):
+          total: 0.2263
+    POPC C2 (27):
+      total: 0.1863
+      bonds:
+        POPC HS (28):
+          total: 0.1863
+    POPC C22 (32):
+      total: 0.1008
+      bonds:
+        POPC H2R (33):
+          total: 0.0927
+        POPC H2S (34):
+          total: 0.1088
+    POPC C3 (35):
+      total: 0.1043
+      bonds:
+        POPC HX (36):
+          total: 0.1909
+        POPC HY (37):
+          total: 0.0169
+    POPC C32 (41):
+      total: 0.2363
+      bonds:
+        POPC H2X (42):
+          total: 0.2383
+        POPC H2Y (43):
+          total: 0.2343
+    POPC C23 (44):
+      total: 0.2129
+      bonds:
+        POPC H3R (45):
+          total: 0.2112
+        POPC H3S (46):
+          total: 0.2145
+    POPC C24 (47):
+      total: 0.206
+      bonds:
+        POPC H4R (48):
+          total: 0.2095
+        POPC H4S (49):
+          total: 0.2025
+    POPC C25 (50):
+      total: 0.2194
+      bonds:
+        POPC H5R (51):
+          total: 0.2339
+        POPC H5S (52):
+          total: 0.205
+    POPC C26 (53):
+      total: 0.1928
+      bonds:
+        POPC H6R (54):
+          total: 0.1971
+        POPC H6S (55):
+          total: 0.1886
+    POPC C27 (56):
+      total: 0.1831
+      bonds:
+        POPC H7R (57):
+          total: 0.1873
+        POPC H7S (58):
+          total: 0.1788
+    POPC C28 (59):
+      total: 0.0981
+      bonds:
+        POPC H8R (60):
+          total: 0.1071
+        POPC H8S (61):
+          total: 0.0892
+    POPC C29 (62):
+      total: 0.0432
+      bonds:
+        POPC H91 (63):
+          total: 0.0432
+    POPC C210 (64):
+      total: 0.0577
+      bonds:
+        POPC H101 (65):
+          total: 0.0577
+    POPC C211 (66):
+      total: 0.1018
+      bonds:
+        POPC H11R (67):
+          total: 0.1132
+        POPC H11S (68):
+          total: 0.0904
+    POPC C212 (69):
+      total: 0.1392
+      bonds:
+        POPC H12R (70):
+          total: 0.1463
+        POPC H12S (71):
+          total: 0.1321
+    POPC C213 (72):
+      total: 0.1467
+      bonds:
+        POPC H13R (73):
+          total: 0.1516
+        POPC H13S (74):
+          total: 0.1417
+    POPC C214 (75):
+      total: 0.154
+      bonds:
+        POPC H14R (76):
+          total: 0.1457
+        POPC H14S (77):
+          total: 0.1623
+    POPC C215 (78):
+      total: 0.1463
+      bonds:
+        POPC H15R (79):
+          total: 0.1435
+        POPC H15S (80):
+          total: 0.149
+    POPC C216 (81):
+      total: 0.1318
+      bonds:
+        POPC H16R (82):
+          total: 0.1328
+        POPC H16S (83):
+          total: 0.1308
+    POPC C217 (84):
+      total: 0.1033
+      bonds:
+        POPC H17R (85):
+          total: 0.1087
+        POPC H17S (86):
+          total: 0.0978
+    POPC C218 (87):
+      total: 0.0313
+      bonds:
+        POPC H18R (88):
+          total: 0.0329
+        POPC H18S (89):
+          total: 0.0313
+        POPC H18T (90):
+          total: 0.0296
+    POPC C33 (91):
+      total: 0.1891
+      bonds:
+        POPC H3X (92):
+          total: 0.1852
+        POPC H3Y (93):
+          total: 0.1931
+    POPC C34 (94):
+      total: 0.2339
+      bonds:
+        POPC H4X (95):
+          total: 0.2315
+        POPC H4Y (96):
+          total: 0.2363
+    POPC C35 (97):
+      total: 0.2209
+      bonds:
+        POPC H5X (98):
+          total: 0.2135
+        POPC H5Y (99):
+          total: 0.2282
+    POPC C36 (100):
+      total: 0.2379
+      bonds:
+        POPC H6X (101):
+          total: 0.2282
+        POPC H6Y (102):
+          total: 0.2475
+    POPC C37 (103):
+      total: 0.2397
+      bonds:
+        POPC H7X (104):
+          total: 0.2389
+        POPC H7Y (105):
+          total: 0.2405
+    POPC C38 (106):
+      total: 0.2433
+      bonds:
+        POPC H8X (107):
+          total: 0.243
+        POPC H8Y (108):
+          total: 0.2437
+    POPC C39 (109):
+      total: 0.2283
+      bonds:
+        POPC H9X (110):
+          total: 0.234
+        POPC H9Y (111):
+          total: 0.2225
+    POPC C310 (112):
+      total: 0.2253
+      bonds:
+        POPC H10X (113):
+          total: 0.2372
+        POPC H10Y (114):
+          total: 0.2134
+    POPC C311 (115):
+      total: 0.2002
+      bonds:
+        POPC H11X (116):
+          total: 0.2083
+        POPC H11Y (117):
+          total: 0.1922
+    POPC C312 (118):
+      total: 0.1899
+      bonds:
+        POPC H12X (119):
+          total: 0.1939
+        POPC H12Y (120):
+          total: 0.1858
+    POPC C313 (121):
+      total: 0.1681
+      bonds:
+        POPC H13X (122):
+          total: 0.1729
+        POPC H13Y (123):
+          total: 0.1632
+    POPC C314 (124):
+      total: 0.1389
+      bonds:
+        POPC H14X (125):
+          total: 0.1429
+        POPC H14Y (126):
+          total: 0.1348
+    POPC C315 (127):
+      total: 0.1028
+      bonds:
+        POPC H15X (128):
+          total: 0.1112
+        POPC H15Y (129):
+          total: 0.0944
+    POPC C316 (130):
+      total: 0.0332
+      bonds:
+        POPC H16X (131):
+          total: 0.0324
+        POPC H16Y (132):
+          total: 0.0329
+        POPC H16Z (133):
+          total: 0.0342
+POPG:
+  average order:
+    total: 0.1428
+  order parameters:
+    POPG C13 (0):
+      total: 0.0041
+      bonds:
+        POPG H13A (1):
+          total: 0.0429
+        POPG H13B (2):
+          total: -0.0342
+    POPG C12 (5):
+      total: -0.0678
+      bonds:
+        POPG H12A (6):
+          total: -0.0678
+    POPG C11 (9):
+      total: -0.038
+      bonds:
+        POPG H11A (10):
+          total: -0.1
+        POPG H11B (11):
+          total: 0.0232
+    POPG C1 (17):
+      total: 0.2374
+      bonds:
+        POPG HA (18):
+          total: 0.2598
+        POPG HB (19):
+          total: 0.2148
+    POPG C2 (20):
+      total: 0.2011
+      bonds:
+        POPG HS (21):
+          total: 0.2011
+    POPG C22 (25):
+      total: 0.0754
+      bonds:
+        POPG H2R (26):
+          total: 0.079
+        POPG H2S (27):
+          total: 0.0718
+    POPG C3 (28):
+      total: 0.0588
+      bonds:
+        POPG HX (29):
+          total: -0.0185
+        POPG HY (30):
+          total: 0.1357
+    POPG C32 (34):
+      total: 0.2733
+      bonds:
+        POPG H2X (35):
+          total: 0.2894
+        POPG H2Y (36):
+          total: 0.2573
+    POPG C23 (37):
+      total: 0.2279
+      bonds:
+        POPG H3R (38):
+          total: 0.243
+        POPG H3S (39):
+          total: 0.2128
+    POPG C24 (40):
+      total: 0.2292
+      bonds:
+        POPG H4R (41):
+          total: 0.2218
+        POPG H4S (42):
+          total: 0.2365
+    POPG C25 (43):
+      total: 0.2069
+      bonds:
+        POPG H5R (44):
+          total: 0.1764
+        POPG H5S (45):
+          total: 0.2375
+    POPG C26 (46):
+      total: 0.1867
+      bonds:
+        POPG H6R (47):
+          total: 0.1682
+        POPG H6S (48):
+          total: 0.2053
+    POPG C27 (49):
+      total: 0.1727
+      bonds:
+        POPG H7R (50):
+          total: 0.1426
+        POPG H7S (51):
+          total: 0.2024
+    POPG C28 (52):
+      total: 0.1351
+      bonds:
+        POPG H8R (53):
+          total: 0.1829
+        POPG H8S (54):
+          total: 0.087
+    POPG C29 (55):
+      total: 0.1289
+      bonds:
+        POPG H91 (56):
+          total: 0.1289
+    POPG C210 (57):
+      total: 0.0031
+      bonds:
+        POPG H101 (58):
+          total: 0.0031
+    POPG C211 (59):
+      total: 0.0526
+      bonds:
+        POPG H11R (60):
+          total: -0.0266
+        POPG H11S (61):
+          total: 0.1316
+    POPG C212 (62):
+      total: 0.1217
+      bonds:
+        POPG H12R (63):
+          total: 0.1227
+        POPG H12S (64):
+          total: 0.1207
+    POPG C213 (65):
+      total: 0.1226
+      bonds:
+        POPG H13R (66):
+          total: 0.1476
+        POPG H13S (67):
+          total: 0.0976
+    POPG C214 (68):
+      total: 0.1521
+      bonds:
+        POPG H14R (69):
+          total: 0.167
+        POPG H14S (70):
+          total: 0.1373
+    POPG C215 (71):
+      total: 0.1284
+      bonds:
+        POPG H15R (72):
+          total: 0.1351
+        POPG H15S (73):
+          total: 0.1218
+    POPG C216 (74):
+      total: 0.1098
+      bonds:
+        POPG H16R (75):
+          total: 0.1238
+        POPG H16S (76):
+          total: 0.0959
+    POPG C217 (77):
+      total: 0.1036
+      bonds:
+        POPG H17R (78):
+          total: 0.0951
+        POPG H17S (79):
+          total: 0.1121
+    POPG C218 (80):
+      total: 0.0348
+      bonds:
+        POPG H18R (81):
+          total: 0.0194
+        POPG H18S (82):
+          total: 0.0245
+        POPG H18T (83):
+          total: 0.0604
+    POPG C33 (84):
+      total: 0.1888
+      bonds:
+        POPG H3X (85):
+          total: 0.1677
+        POPG H3Y (86):
+          total: 0.2101
+    POPG C34 (87):
+      total: 0.2267
+      bonds:
+        POPG H4X (88):
+          total: 0.2185
+        POPG H4Y (89):
+          total: 0.2349
+    POPG C35 (90):
+      total: 0.2408
+      bonds:
+        POPG H5X (91):
+          total: 0.2595
+        POPG H5Y (92):
+          total: 0.2219
+    POPG C36 (93):
+      total: 0.2387
+      bonds:
+        POPG H6X (94):
+          total: 0.2601
+        POPG H6Y (95):
+          total: 0.2175
+    POPG C37 (96):
+      total: 0.231
+      bonds:
+        POPG H7X (97):
+          total: 0.2512
+        POPG H7Y (98):
+          total: 0.2102
+    POPG C38 (99):
+      total: 0.2216
+      bonds:
+        POPG H8X (100):
+          total: 0.2329
+        POPG H8Y (101):
+          total: 0.2105
+    POPG C39 (102):
+      total: 0.2118
+      bonds:
+        POPG H9X (103):
+          total: 0.217
+        POPG H9Y (104):
+          total: 0.2066
+    POPG C310 (105):
+      total: 0.2059
+      bonds:
+        POPG H10X (106):
+          total: 0.2108
+        POPG H10Y (107):
+          total: 0.2011
+    POPG C311 (108):
+      total: 0.1959
+      bonds:
+        POPG H11X (109):
+          total: 0.2071
+        POPG H11Y (110):
+          total: 0.1848
+    POPG C312 (111):
+      total: 0.2001
+      bonds:
+        POPG H12X (112):
+          total: 0.2253
+        POPG H12Y (113):
+          total: 0.1749
+    POPG C313 (114):
+      total: 0.1668
+      bonds:
+        POPG H13X (115):
+          total: 0.1862
+        POPG H13Y (116):
+          total: 0.1474
+    POPG C314 (117):
+      total: 0.138
+      bonds:
+        POPG H14X (118):
+          total: 0.1496
+        POPG H14Y (119):
+          total: 0.1266
+    POPG C315 (120):
+      total: 0.0841
+      bonds:
+        POPG H15X (121):
+          total: 0.07
+        POPG H15Y (122):
+          total: 0.0985
+    POPG C316 (123):
+      total: 0.0354
+      bonds:
+        POPG H16X (124):
+          total: 0.0357
+        POPG H16Y (125):
+          total: 0.0046
+        POPG H16Z (126):
+          total: 0.0658

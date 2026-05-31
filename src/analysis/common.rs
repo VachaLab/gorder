@@ -44,10 +44,11 @@ fn get_hint(group: &str) -> String {
         "NormalMethyls" => ("methyls".bright_blue(), "membrane_normal".bright_blue()),
         "ClusterHeads" => ("heads".bright_blue(), "leaflets".bright_blue()),
         "Methyls" => ("methyls".bright_blue(), "leaflets".bright_blue()),
-        "GeomReference" => ("reference".bright_blue(), "geometry".bright_blue()),
         "Saturated" => ("saturated".bright_blue(), "analysis_type".bright_blue()),
         "Unsaturated" => ("unsaturated".bright_blue(), "analysis_type".bright_blue()),
         "Ignore" => ("ignore".bright_blue(), "analysis_type".bright_blue()),
+        // matching on part of geometry reference group name
+        s if s.contains("GeomReference") => ("reference".bright_blue(), "geometry".bright_blue()),
         // unknown group name; this should not happen, but it's not important so we will pretend it's okay
         _ => return String::from("a query specifying the group selects no atoms"),
     };
@@ -449,4 +450,27 @@ pub(super) fn interleave_vectors<T: Clone>(vec1: &[T], vec2: &[T], n: usize, m: 
     }
 
     result
+}
+
+/// Remove unsupported characters from query to allow it to be used as a group name.
+pub fn sanitize_query(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() * 2);
+    for ch in s.chars() {
+        match ch {
+            c if c.is_whitespace() => out.push('_'),
+            '\'' => out.push_str("SQ"),
+            '"' => out.push_str("DQ"),
+            '&' => out.push_str("AN"),
+            '|' => out.push_str("PI"),
+            '!' => out.push_str("EX"),
+            '@' => out.push_str("AT"),
+            '(' => out.push_str("LP"),
+            ')' => out.push_str("RP"),
+            '<' => out.push_str("LT"),
+            '>' => out.push_str("GT"),
+            '=' => out.push_str("EQ"),
+            c => out.push(c),
+        }
+    }
+    out
 }

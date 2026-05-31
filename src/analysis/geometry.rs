@@ -10,6 +10,7 @@ use groan_rs::{
 use log::info;
 
 use crate::{
+    analysis::common::{macros::group_name, sanitize_query},
     errors::TopologyError,
     input::{
         geometry::{CuboidSelection, CylinderSelection, GeomReference, SphereSelection},
@@ -18,7 +19,7 @@ use crate::{
     PANIC_MESSAGE,
 };
 
-use super::{common::macros::group_name, pbc::PBCHandler};
+use super::pbc::PBCHandler;
 
 /// Enum encompassing all possible geometry selections.
 #[derive(Debug, Clone)]
@@ -230,7 +231,14 @@ pub(crate) trait GeometrySelection: Send + Sync {
             GeomReference::Point(_) | GeomReference::Center => Ok(()), // nothing to do
             GeomReference::Selection(query) => {
                 // construct a group for geometry reference
-                super::common::create_group(system, "GeomReference", query)
+                super::common::create_group(
+                    system,
+                    // we need to use the query as part of the group name because
+                    // there may be multiple geometry references
+                    // we need to remove unsupported characters from the query
+                    &format!("GeomReference-{}", sanitize_query(query)),
+                    query,
+                )
             }
         }
     }
@@ -251,10 +259,10 @@ pub(crate) trait GeometrySelection: Send + Sync {
     fn init_reference<'a>(&mut self, system: &System, pbc_handler: &impl PBCHandler<'a>) {
         let reference_point = match self.reference() {
             GeomReference::Point(_) => return, // nothing to do, reference position is fixed
-            GeomReference::Selection(_) => {
+            GeomReference::Selection(query) => {
                 // calculate the center of geometry
                 pbc_handler
-                    .group_get_center(system, group_name!("GeomReference"))
+                    .group_get_center(system, &format!("{}-{}", group_name!("GeomReference"), sanitize_query(query)))
                     .unwrap_or_else(|_| panic!("FATAL GORDER ERROR | GeometrySelection::init_reference | Group specifying geometry reference should exist. {}", PANIC_MESSAGE))
             }
             GeomReference::Center => {
@@ -578,7 +586,7 @@ mod tests_cuboid {
     use approx::assert_relative_eq;
     use rand::prelude::*;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -768,7 +776,11 @@ mod tests_cuboid {
         geometry.init_reference(&system, &pbc);
 
         let mut membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         membrane_center.x -= 1.0;
         membrane_center.y += 1.5;
@@ -812,7 +824,7 @@ mod tests_cylinder {
     use approx::assert_relative_eq;
     use groan_rs::prelude::Dimension;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -928,7 +940,11 @@ mod tests_cylinder {
         geometry.init_reference(&system, &pbc);
 
         let mut membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         membrane_center.z += 1.5;
         membrane_center.wrap(system.get_box().unwrap());
@@ -970,7 +986,7 @@ mod tests_cylinder {
 mod tests_sphere {
     use approx::assert_relative_eq;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -1069,7 +1085,11 @@ mod tests_sphere {
         geometry.init_reference(&system, &pbc);
 
         let membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         let shape = geometry.shape();
         let point = shape.get_position();
