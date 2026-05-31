@@ -210,6 +210,9 @@ fn gorder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     geometry.add_class::<geometry::Cuboid>()?;
     geometry.add_class::<geometry::Cylinder>()?;
     geometry.add_class::<geometry::Sphere>()?;
+    geometry.add_class::<geometry::And>()?;
+    geometry.add_class::<geometry::Or>()?;
+    geometry.add_class::<geometry::Not>()?;
     m.add_submodule(&geometry)?;
 
     // module: ordermap

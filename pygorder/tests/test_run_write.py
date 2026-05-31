@@ -3,8 +3,14 @@ Released under MIT License.
 Copyright (c) 2024-2026 Ladislav Bartos
 """
 
-import gorder, tempfile, shutil, os, yaml, pytest
+import os
+import shutil
+import tempfile
+
+import gorder
 import numpy as np
+import pytest
+import yaml
 
 
 def read_file_without_first_lines(file_path: str, skip: int) -> list[str]:
@@ -1292,3 +1298,42 @@ def test_ua_order_fail_no_carbons():
         "no carbons for the calculation of united-atom order parameters were specified"
         in str(excinfo.value)
     )
+
+
+def test_aa_order_composite_geometry():
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
+
+    analysis = gorder.Analysis(
+        structure="../tests/files/pcpepg.tpr",
+        trajectory="../tests/files/pcpepg.xtc",
+        analysis_type=gorder.analysis_types.AAOrder(
+            heavy_atoms="@membrane and element name carbon",
+            hydrogens="@membrane and element name hydrogen",
+        ),
+        geometry=gorder.geometry.And(
+            gorder.geometry.Or(
+                gorder.geometry.Sphere(reference=[6.0, 7.0, 5.0], radius=3.0),
+                gorder.geometry.Cylinder(
+                    reference="center", radius=3.0, span=[-3.0, 2.0], orientation="x"
+                ),
+            ),
+            gorder.geometry.Not(
+                gorder.geometry.Cuboid(
+                    reference="resid 145", xdim=[-1.5, 1.5], ydim=[-1.5, 1.5]
+                )
+            ),
+        ),
+        output_yaml=temp_file_path,
+        silent=True,
+        overwrite=True,
+    )
+
+    analysis.run().write()
+
+    try:
+        assert diff_files_ignore_first(
+            temp_file_path, "../tests/files/aa_order_composite_geometry_complex.yaml", 1
+        ), "Files do not match!"
+    finally:
+        shutil.rmtree(temp_file_path, ignore_errors=True)

@@ -199,7 +199,7 @@ impl<'source> FromPyObject<'source, '_> for TrajectoryInput {
 ///     Specifies parameters for ordermap calculations. If not provided, ordermaps are not generated.
 /// estimate_error : Optional[EstimateError], default=None
 ///     Enables error estimation for each bond if specified.
-/// geometry : Optional[Union[Cuboid, Cylinder, Sphere]], default=None
+/// geometry : Optional[Union[Cuboid, Cylinder, Sphere, And, Or, Not]], default=None
 ///     Defines a specific region in the simulation box for order parameter calculations. Defaults to the entire system.
 /// handle_pbc : Optional[bool], default=True
 ///     If False, ignores periodic boundary conditions (PBC). Defaults to True.
@@ -275,7 +275,7 @@ impl Analysis {
         ))]
         estimate_error: Option<EstimateError>,
         #[gen_stub(override_type(
-            type_repr = "typing.Optional[typing.Union[gorder.geometry.Cuboid, gorder.geometry.Cylinder, gorder.geometry.Sphere]]"
+            type_repr = "typing.Optional[typing.Union[gorder.geometry.Cuboid, gorder.geometry.Cylinder, gorder.geometry.Sphere, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]]"
         ))]
         geometry: Option<Bound<'a, PyAny>>,
         handle_pbc: Option<bool>,
