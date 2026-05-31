@@ -112,11 +112,13 @@ impl Geometry {
             Geometry::Sphere(x) => x.invert = invert,
             _ => {}
         }
-        self = match self {
-            Geometry::And(_, _) | Geometry::Or(_, _) => Geometry::Not(Box::new(self)),
-            Geometry::Not(x) => *x,
-            other => other,
-        };
+        if invert {
+            self = match self {
+                Geometry::And(_, _) | Geometry::Or(_, _) => Geometry::Not(Box::new(self)),
+                Geometry::Not(x) => *x,
+                other => other,
+            };
+        }
 
         self
     }
@@ -805,6 +807,10 @@ mod pass_tests {
         })
     }
 
+    fn simple_sphere() -> Geometry {
+        sphere_with_ref(GeomReference::origin())
+    }
+
     #[test]
     fn uses_box_center_cuboid_point() {
         let geom = cuboid_with_ref(GeomReference::origin());
@@ -918,6 +924,148 @@ mod pass_tests {
         let c = cylinder_with_ref(GeomReference::origin());
         let geom = Geometry::not(Geometry::and(a, Geometry::or(b, c)));
         assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn with_invert_cuboid_true() {
+        let geom = cuboid_with_ref(GeomReference::origin()).with_invert(true);
+        match geom {
+            Geometry::Cuboid(c) => assert!(c.invert),
+            _ => panic!("Expected Cuboid"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cuboid_false() {
+        let mut geom = cuboid_with_ref(GeomReference::origin());
+        if let Geometry::Cuboid(ref mut c) = geom {
+            c.invert = true;
+        }
+        let geom = geom.with_invert(false);
+        match geom {
+            Geometry::Cuboid(c) => assert!(!c.invert),
+            _ => panic!("Expected Cuboid"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cylinder_true() {
+        let geom = cylinder_with_ref(GeomReference::origin()).with_invert(true);
+        match geom {
+            Geometry::Cylinder(c) => assert!(c.invert),
+            _ => panic!("Expected Cylinder"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cylinder_false() {
+        let geom = cylinder_with_ref(GeomReference::origin()).with_invert(false);
+        match geom {
+            Geometry::Cylinder(c) => assert!(!c.invert),
+            _ => panic!("Expected Cylinder"),
+        }
+    }
+
+    #[test]
+    fn with_invert_sphere_true() {
+        let geom = simple_sphere().with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => assert!(s.invert),
+            _ => panic!("Expected Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_sphere_false() {
+        let geom = simple_sphere().with_invert(false);
+        match geom {
+            Geometry::Sphere(s) => assert!(!s.invert),
+            _ => panic!("Expected Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_true_wraps_in_not() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere()).with_invert(true);
+        match geom {
+            Geometry::Not(inner) => match *inner {
+                Geometry::And(_, _) => {}
+                _ => panic!("Expected And inside Not"),
+            },
+            _ => panic!("Expected Not wrapping And"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_false_unchanged() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::And(_, _) => {}
+            _ => panic!("Expected And to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_or_true_wraps_in_not() {
+        let geom = Geometry::or(simple_sphere(), simple_sphere()).with_invert(true);
+        match geom {
+            Geometry::Not(inner) => match *inner {
+                Geometry::Or(_, _) => {}
+                _ => panic!("Expected Or inside Not"),
+            },
+            _ => panic!("Expected Not wrapping Or"),
+        }
+    }
+
+    #[test]
+    fn with_invert_or_false_unchanged() {
+        let geom = Geometry::or(simple_sphere(), simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::Or(_, _) => {}
+            _ => panic!("Expected Or to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_not_true_unwraps() {
+        let inner = simple_sphere();
+        let geom = Geometry::not(inner).with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => {
+                // The inner sphere should be returned as-is
+                assert_relative_eq!(s.radius, 1.0);
+            }
+            _ => panic!("Expected Not to be unwrapped into Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_not_false_unchanged() {
+        let geom = Geometry::not(simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::Not(_) => {}
+            _ => panic!("Expected Not to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_double_invert_sphere() {
+        let geom = simple_sphere().with_invert(true).with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => assert!(s.invert),
+            _ => panic!("Expected Sphere after double invert"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_double_invert_roundtrips() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere())
+            .with_invert(true)
+            .with_invert(true);
+        match geom {
+            Geometry::And(_, _) => {}
+            _ => panic!("Expected And after double invert, got {:?}", geom),
+        }
     }
 
     #[test]
