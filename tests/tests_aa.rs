@@ -3927,6 +3927,49 @@ fn test_aa_order_composite_geometry_full() {
 }
 
 #[test]
+fn test_aa_order_composite_geometry_no_overlap() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::cylinder(
+                GeomReference::center(),
+                2.5,
+                [f32::NEG_INFINITY, f32::INFINITY],
+                Axis::Z,
+            )
+            .unwrap(),
+            Geometry::cuboid(
+                GeomReference::origin(),
+                [0.0, 2.0],
+                [2.0, 3.0],
+                [f32::NEG_INFINITY, f32::INFINITY],
+            )
+            .unwrap(),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_geometry_empty.yaml",
+        1,
+    );
+}
+
+#[test]
 fn test_aa_order_leaflets_from_file_once_multiple_threads() {
     for n_threads in [1, 2, 5, 8, 16] {
         let output = NamedTempFile::new().unwrap();
