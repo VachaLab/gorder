@@ -725,7 +725,7 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "gorder"
-version = "1.5.0-dev.1"
+version = "1.5.0"
 dependencies = [
  "approx",
  "assert_cmd",
@@ -1501,7 +1501,7 @@ dependencies = [
 
 [[package]]
 name = "pygorder"
-version = "1.5.0-dev.1"
+version = "1.5.0"
 dependencies = [
  "colog",
  "ctrlc",
