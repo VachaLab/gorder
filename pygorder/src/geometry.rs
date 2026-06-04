@@ -30,10 +30,10 @@ impl<'source> FromPyObject<'source, '_> for Geometry {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'source, '_, PyAny>) -> PyResult<Self> {
-        try_extract!(obj, Cuboid, Cylinder, Sphere);
+        try_extract!(obj, Cuboid, Cylinder, Sphere, And, Or, Not);
 
         Err(ConfigError::new_err(
-            "expected an instance of Cuboid, Cylinder, or Sphere",
+            "expected an instance of Cuboid, Cylinder, Sphere, And, Or, or Not",
         ))
     }
 }
@@ -201,6 +201,111 @@ impl Sphere {
                 .map_err(|e| ConfigError::new_err(e.to_string()))?
                 .with_invert(invert),
         ))
+    }
+}
+
+/// Combine two geometry selections with logical AND.
+/// Bonds will only be selected if they fulfill both selections.
+///
+/// Parameters
+/// ----------
+/// a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+///     First geometry selection.
+/// b : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+///     Second geometry selection.
+#[gen_stub_pyclass]
+#[pyclass(module = "gorder.geometry")]
+#[derive(Clone)]
+pub struct And(RsGeometry);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl And {
+    #[new]
+    #[pyo3(signature = (
+        a,
+        b,
+        invert = false))]
+    pub fn new(
+        #[gen_stub(override_type(
+            type_repr = "typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]", imports = ("typing")
+        ))]
+        a: Geometry,
+        #[gen_stub(override_type(
+            type_repr = "typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]", imports = ("typing")
+        ))]
+        b: Geometry,
+        invert: bool,
+    ) -> Self {
+        Self(RsGeometry::and(a.0, b.0).with_invert(invert))
+    }
+}
+
+/// Combine two geometry selections with logical OR.
+/// Bonds will be selected if they fulfill any of the two selections.
+///
+/// Parameters
+/// ----------
+/// a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+///     First geometry selection.
+/// b : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+///     Second geometry selection.
+#[gen_stub_pyclass]
+#[pyclass(module = "gorder.geometry")]
+#[derive(Clone)]
+pub struct Or(RsGeometry);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl Or {
+    #[new]
+    #[pyo3(signature = (
+        a,
+        b,
+        invert = false))]
+    pub fn new(
+        #[gen_stub(override_type(
+            type_repr = "typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]", imports = ("typing")
+        ))]
+        a: Geometry,
+        #[gen_stub(override_type(
+            type_repr = "typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]", imports = ("typing")
+        ))]
+        b: Geometry,
+        invert: bool,
+    ) -> Self {
+        Self(RsGeometry::or(a.0, b.0).with_invert(invert))
+    }
+}
+
+/// Invert a geometry selection with logical NOT.
+/// Bonds will be selected if they are not inside the given geometry.
+/// This is equivalent to the invert keyword.
+///
+/// Parameters
+/// ----------
+/// a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+///     Geometry selection to invert.
+#[gen_stub_pyclass]
+#[pyclass(module = "gorder.geometry")]
+#[derive(Clone)]
+pub struct Not(RsGeometry);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl Not {
+    #[new]
+    #[pyo3(signature = (
+        a,
+        invert = false))]
+    pub fn new(
+        #[gen_stub(override_type(
+            type_repr = "typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not]", imports = ("typing")
+        ))]
+        a: Geometry,
+        invert: bool,
+    ) -> Self {
+        Self(RsGeometry::not(a.0).with_invert(invert))
     }
 }
 

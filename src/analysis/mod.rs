@@ -65,7 +65,8 @@ impl Analysis {
                 }
                 MembraneNormal::Dynamic(_)
                 | MembraneNormal::FromFile(_)
-                | MembraneNormal::FromMap(_) => Err(OrderMapConfigError::InvalidPlaneAuto),
+                | MembraneNormal::FromMap(_)
+                | MembraneNormal::Individual(_) => Err(OrderMapConfigError::InvalidPlaneAuto),
             };
         }
 

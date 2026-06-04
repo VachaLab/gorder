@@ -1,0 +1,24 @@
+# Test file for binary application.
+structure: tests/files/pcpepg.tpr
+trajectory: tests/files/pcpepg.xtc
+type: !AAOrder
+  heavy_atoms: "@membrane and element name carbon"
+  hydrogens: "@membrane and element name hydrogen"
+output_yaml: temp_aa_order_composite_geometry.yaml
+geometry: !And
+  - !Or
+    - !Sphere
+      reference: [6.0, 7.0, 5.0]
+      radius: 3.0
+    - !Cylinder
+      reference: !Center
+      radius: 3.0
+      span: [-3.0, 2.0]
+      orientation: x
+  - !Not
+    - !Cuboid
+      reference: "resid 145"
+      x: [-1.5, 1.5]
+      y: [-1.5, 1.5]
+silent: true
+overwrite: true

@@ -12,7 +12,7 @@ use std::{
 };
 
 use approx::assert_relative_eq;
-use gorder::prelude::*;
+use gorder::{input::membrane_normal::IndividualNormal, prelude::*};
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 use std::io::Write;
@@ -2716,6 +2716,54 @@ fn test_cg_order_geometry_cylinder_z_inverted_multiple_threads() {
 }
 
 #[test]
+fn test_cg_order_composite_geometry_complex_multiple_threads() {
+    for n_threads in [1, 3, 4, 7, 8, 16, 64] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/cg.tpr")
+            .trajectory("tests/files/cg.xtc")
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .output_yaml(path_to_output)
+            .geometry(Geometry::or(
+                Geometry::and(
+                    Geometry::cylinder(
+                        [0.0, 2.0, 0.0],
+                        4.0,
+                        [f32::NEG_INFINITY, f32::INFINITY],
+                        Axis::Z,
+                    )
+                    .unwrap(),
+                    Geometry::not(
+                        Geometry::cuboid(
+                            GeomReference::center(),
+                            [0.0, 6.5],
+                            [0.0, 6.5],
+                            [f32::NEG_INFINITY, f32::INFINITY],
+                        )
+                        .unwrap(),
+                    ),
+                ),
+                Geometry::sphere("resid 181", 3.0).unwrap(),
+            ))
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/cg_order_composite_geometry_complex.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
 fn test_cg_order_leaflets_from_file_once_multiple_threads() {
     for n_threads in [1, 2, 5, 8, 16, 32] {
         let output = NamedTempFile::new().unwrap();
@@ -3382,6 +3430,34 @@ fn test_cg_order_leaflets_dynamic_membrane_normal_yaml() {
         assert_eq_order(
             path_to_output,
             "tests/files/cg_order_leaflets_dynamic.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
+fn test_cg_order_individual_membrane_normal_yaml() {
+    for n_threads in [1, 3, 8, 32] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/cg.tpr")
+            .trajectory("tests/files/cg.xtc")
+            .output(path_to_output)
+            .analysis_type(AnalysisType::cgorder("@membrane"))
+            .membrane_normal(IndividualNormal::new("name PO4", "name C4A C4B"))
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/cg_order_individual_normals.yaml",
             1,
         );
     }

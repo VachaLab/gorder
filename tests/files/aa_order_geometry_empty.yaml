@@ -1,0 +1,818 @@
+# Order parameters calculated with 'gorder v1.5.0-dev.1' using a structure file 'tests/files/pcpepg.tpr' and a trajectory file 'tests/files/pcpepg.xtc'.
+average order:
+  total: .nan
+POPE:
+  average order:
+    total: .nan
+  order parameters:
+    POPE C12 (4):
+      total: .nan
+      bonds:
+        POPE H12A (5):
+          total: .nan
+        POPE H12B (6):
+          total: .nan
+    POPE C11 (7):
+      total: .nan
+      bonds:
+        POPE H11A (8):
+          total: .nan
+        POPE H11B (9):
+          total: .nan
+    POPE C1 (15):
+      total: .nan
+      bonds:
+        POPE HA (16):
+          total: .nan
+        POPE HB (17):
+          total: .nan
+    POPE C2 (18):
+      total: .nan
+      bonds:
+        POPE HS (19):
+          total: .nan
+    POPE C22 (23):
+      total: .nan
+      bonds:
+        POPE H2R (24):
+          total: .nan
+        POPE H2S (25):
+          total: .nan
+    POPE C3 (26):
+      total: .nan
+      bonds:
+        POPE HX (27):
+          total: .nan
+        POPE HY (28):
+          total: .nan
+    POPE C32 (32):
+      total: .nan
+      bonds:
+        POPE H2X (33):
+          total: .nan
+        POPE H2Y (34):
+          total: .nan
+    POPE C23 (35):
+      total: .nan
+      bonds:
+        POPE H3R (36):
+          total: .nan
+        POPE H3S (37):
+          total: .nan
+    POPE C24 (38):
+      total: .nan
+      bonds:
+        POPE H4R (39):
+          total: .nan
+        POPE H4S (40):
+          total: .nan
+    POPE C25 (41):
+      total: .nan
+      bonds:
+        POPE H5R (42):
+          total: .nan
+        POPE H5S (43):
+          total: .nan
+    POPE C26 (44):
+      total: .nan
+      bonds:
+        POPE H6R (45):
+          total: .nan
+        POPE H6S (46):
+          total: .nan
+    POPE C27 (47):
+      total: .nan
+      bonds:
+        POPE H7R (48):
+          total: .nan
+        POPE H7S (49):
+          total: .nan
+    POPE C28 (50):
+      total: .nan
+      bonds:
+        POPE H8R (51):
+          total: .nan
+        POPE H8S (52):
+          total: .nan
+    POPE C29 (53):
+      total: .nan
+      bonds:
+        POPE H91 (54):
+          total: .nan
+    POPE C210 (55):
+      total: .nan
+      bonds:
+        POPE H101 (56):
+          total: .nan
+    POPE C211 (57):
+      total: .nan
+      bonds:
+        POPE H11R (58):
+          total: .nan
+        POPE H11S (59):
+          total: .nan
+    POPE C212 (60):
+      total: .nan
+      bonds:
+        POPE H12R (61):
+          total: .nan
+        POPE H12S (62):
+          total: .nan
+    POPE C213 (63):
+      total: .nan
+      bonds:
+        POPE H13R (64):
+          total: .nan
+        POPE H13S (65):
+          total: .nan
+    POPE C214 (66):
+      total: .nan
+      bonds:
+        POPE H14R (67):
+          total: .nan
+        POPE H14S (68):
+          total: .nan
+    POPE C215 (69):
+      total: .nan
+      bonds:
+        POPE H15R (70):
+          total: .nan
+        POPE H15S (71):
+          total: .nan
+    POPE C216 (72):
+      total: .nan
+      bonds:
+        POPE H16R (73):
+          total: .nan
+        POPE H16S (74):
+          total: .nan
+    POPE C217 (75):
+      total: .nan
+      bonds:
+        POPE H17R (76):
+          total: .nan
+        POPE H17S (77):
+          total: .nan
+    POPE C218 (78):
+      total: .nan
+      bonds:
+        POPE H18R (79):
+          total: .nan
+        POPE H18S (80):
+          total: .nan
+        POPE H18T (81):
+          total: .nan
+    POPE C33 (82):
+      total: .nan
+      bonds:
+        POPE H3X (83):
+          total: .nan
+        POPE H3Y (84):
+          total: .nan
+    POPE C34 (85):
+      total: .nan
+      bonds:
+        POPE H4X (86):
+          total: .nan
+        POPE H4Y (87):
+          total: .nan
+    POPE C35 (88):
+      total: .nan
+      bonds:
+        POPE H5X (89):
+          total: .nan
+        POPE H5Y (90):
+          total: .nan
+    POPE C36 (91):
+      total: .nan
+      bonds:
+        POPE H6X (92):
+          total: .nan
+        POPE H6Y (93):
+          total: .nan
+    POPE C37 (94):
+      total: .nan
+      bonds:
+        POPE H7X (95):
+          total: .nan
+        POPE H7Y (96):
+          total: .nan
+    POPE C38 (97):
+      total: .nan
+      bonds:
+        POPE H8X (98):
+          total: .nan
+        POPE H8Y (99):
+          total: .nan
+    POPE C39 (100):
+      total: .nan
+      bonds:
+        POPE H9X (101):
+          total: .nan
+        POPE H9Y (102):
+          total: .nan
+    POPE C310 (103):
+      total: .nan
+      bonds:
+        POPE H10X (104):
+          total: .nan
+        POPE H10Y (105):
+          total: .nan
+    POPE C311 (106):
+      total: .nan
+      bonds:
+        POPE H11X (107):
+          total: .nan
+        POPE H11Y (108):
+          total: .nan
+    POPE C312 (109):
+      total: .nan
+      bonds:
+        POPE H12X (110):
+          total: .nan
+        POPE H12Y (111):
+          total: .nan
+    POPE C313 (112):
+      total: .nan
+      bonds:
+        POPE H13X (113):
+          total: .nan
+        POPE H13Y (114):
+          total: .nan
+    POPE C314 (115):
+      total: .nan
+      bonds:
+        POPE H14X (116):
+          total: .nan
+        POPE H14Y (117):
+          total: .nan
+    POPE C315 (118):
+      total: .nan
+      bonds:
+        POPE H15X (119):
+          total: .nan
+        POPE H15Y (120):
+          total: .nan
+    POPE C316 (121):
+      total: .nan
+      bonds:
+        POPE H16X (122):
+          total: .nan
+        POPE H16Y (123):
+          total: .nan
+        POPE H16Z (124):
+          total: .nan
+POPC:
+  average order:
+    total: .nan
+  order parameters:
+    POPC C12 (1):
+      total: .nan
+      bonds:
+        POPC H12A (2):
+          total: .nan
+        POPC H12B (3):
+          total: .nan
+    POPC C13 (4):
+      total: .nan
+      bonds:
+        POPC H13A (5):
+          total: .nan
+        POPC H13B (6):
+          total: .nan
+        POPC H13C (7):
+          total: .nan
+    POPC C14 (8):
+      total: .nan
+      bonds:
+        POPC H14A (9):
+          total: .nan
+        POPC H14B (10):
+          total: .nan
+        POPC H14C (11):
+          total: .nan
+    POPC C15 (12):
+      total: .nan
+      bonds:
+        POPC H15A (13):
+          total: .nan
+        POPC H15B (14):
+          total: .nan
+        POPC H15C (15):
+          total: .nan
+    POPC C11 (16):
+      total: .nan
+      bonds:
+        POPC H11A (17):
+          total: .nan
+        POPC H11B (18):
+          total: .nan
+    POPC C1 (24):
+      total: .nan
+      bonds:
+        POPC HA (25):
+          total: .nan
+        POPC HB (26):
+          total: .nan
+    POPC C2 (27):
+      total: .nan
+      bonds:
+        POPC HS (28):
+          total: .nan
+    POPC C22 (32):
+      total: .nan
+      bonds:
+        POPC H2R (33):
+          total: .nan
+        POPC H2S (34):
+          total: .nan
+    POPC C3 (35):
+      total: .nan
+      bonds:
+        POPC HX (36):
+          total: .nan
+        POPC HY (37):
+          total: .nan
+    POPC C32 (41):
+      total: .nan
+      bonds:
+        POPC H2X (42):
+          total: .nan
+        POPC H2Y (43):
+          total: .nan
+    POPC C23 (44):
+      total: .nan
+      bonds:
+        POPC H3R (45):
+          total: .nan
+        POPC H3S (46):
+          total: .nan
+    POPC C24 (47):
+      total: .nan
+      bonds:
+        POPC H4R (48):
+          total: .nan
+        POPC H4S (49):
+          total: .nan
+    POPC C25 (50):
+      total: .nan
+      bonds:
+        POPC H5R (51):
+          total: .nan
+        POPC H5S (52):
+          total: .nan
+    POPC C26 (53):
+      total: .nan
+      bonds:
+        POPC H6R (54):
+          total: .nan
+        POPC H6S (55):
+          total: .nan
+    POPC C27 (56):
+      total: .nan
+      bonds:
+        POPC H7R (57):
+          total: .nan
+        POPC H7S (58):
+          total: .nan
+    POPC C28 (59):
+      total: .nan
+      bonds:
+        POPC H8R (60):
+          total: .nan
+        POPC H8S (61):
+          total: .nan
+    POPC C29 (62):
+      total: .nan
+      bonds:
+        POPC H91 (63):
+          total: .nan
+    POPC C210 (64):
+      total: .nan
+      bonds:
+        POPC H101 (65):
+          total: .nan
+    POPC C211 (66):
+      total: .nan
+      bonds:
+        POPC H11R (67):
+          total: .nan
+        POPC H11S (68):
+          total: .nan
+    POPC C212 (69):
+      total: .nan
+      bonds:
+        POPC H12R (70):
+          total: .nan
+        POPC H12S (71):
+          total: .nan
+    POPC C213 (72):
+      total: .nan
+      bonds:
+        POPC H13R (73):
+          total: .nan
+        POPC H13S (74):
+          total: .nan
+    POPC C214 (75):
+      total: .nan
+      bonds:
+        POPC H14R (76):
+          total: .nan
+        POPC H14S (77):
+          total: .nan
+    POPC C215 (78):
+      total: .nan
+      bonds:
+        POPC H15R (79):
+          total: .nan
+        POPC H15S (80):
+          total: .nan
+    POPC C216 (81):
+      total: .nan
+      bonds:
+        POPC H16R (82):
+          total: .nan
+        POPC H16S (83):
+          total: .nan
+    POPC C217 (84):
+      total: .nan
+      bonds:
+        POPC H17R (85):
+          total: .nan
+        POPC H17S (86):
+          total: .nan
+    POPC C218 (87):
+      total: .nan
+      bonds:
+        POPC H18R (88):
+          total: .nan
+        POPC H18S (89):
+          total: .nan
+        POPC H18T (90):
+          total: .nan
+    POPC C33 (91):
+      total: .nan
+      bonds:
+        POPC H3X (92):
+          total: .nan
+        POPC H3Y (93):
+          total: .nan
+    POPC C34 (94):
+      total: .nan
+      bonds:
+        POPC H4X (95):
+          total: .nan
+        POPC H4Y (96):
+          total: .nan
+    POPC C35 (97):
+      total: .nan
+      bonds:
+        POPC H5X (98):
+          total: .nan
+        POPC H5Y (99):
+          total: .nan
+    POPC C36 (100):
+      total: .nan
+      bonds:
+        POPC H6X (101):
+          total: .nan
+        POPC H6Y (102):
+          total: .nan
+    POPC C37 (103):
+      total: .nan
+      bonds:
+        POPC H7X (104):
+          total: .nan
+        POPC H7Y (105):
+          total: .nan
+    POPC C38 (106):
+      total: .nan
+      bonds:
+        POPC H8X (107):
+          total: .nan
+        POPC H8Y (108):
+          total: .nan
+    POPC C39 (109):
+      total: .nan
+      bonds:
+        POPC H9X (110):
+          total: .nan
+        POPC H9Y (111):
+          total: .nan
+    POPC C310 (112):
+      total: .nan
+      bonds:
+        POPC H10X (113):
+          total: .nan
+        POPC H10Y (114):
+          total: .nan
+    POPC C311 (115):
+      total: .nan
+      bonds:
+        POPC H11X (116):
+          total: .nan
+        POPC H11Y (117):
+          total: .nan
+    POPC C312 (118):
+      total: .nan
+      bonds:
+        POPC H12X (119):
+          total: .nan
+        POPC H12Y (120):
+          total: .nan
+    POPC C313 (121):
+      total: .nan
+      bonds:
+        POPC H13X (122):
+          total: .nan
+        POPC H13Y (123):
+          total: .nan
+    POPC C314 (124):
+      total: .nan
+      bonds:
+        POPC H14X (125):
+          total: .nan
+        POPC H14Y (126):
+          total: .nan
+    POPC C315 (127):
+      total: .nan
+      bonds:
+        POPC H15X (128):
+          total: .nan
+        POPC H15Y (129):
+          total: .nan
+    POPC C316 (130):
+      total: .nan
+      bonds:
+        POPC H16X (131):
+          total: .nan
+        POPC H16Y (132):
+          total: .nan
+        POPC H16Z (133):
+          total: .nan
+POPG:
+  average order:
+    total: .nan
+  order parameters:
+    POPG C13 (0):
+      total: .nan
+      bonds:
+        POPG H13A (1):
+          total: .nan
+        POPG H13B (2):
+          total: .nan
+    POPG C12 (5):
+      total: .nan
+      bonds:
+        POPG H12A (6):
+          total: .nan
+    POPG C11 (9):
+      total: .nan
+      bonds:
+        POPG H11A (10):
+          total: .nan
+        POPG H11B (11):
+          total: .nan
+    POPG C1 (17):
+      total: .nan
+      bonds:
+        POPG HA (18):
+          total: .nan
+        POPG HB (19):
+          total: .nan
+    POPG C2 (20):
+      total: .nan
+      bonds:
+        POPG HS (21):
+          total: .nan
+    POPG C22 (25):
+      total: .nan
+      bonds:
+        POPG H2R (26):
+          total: .nan
+        POPG H2S (27):
+          total: .nan
+    POPG C3 (28):
+      total: .nan
+      bonds:
+        POPG HX (29):
+          total: .nan
+        POPG HY (30):
+          total: .nan
+    POPG C32 (34):
+      total: .nan
+      bonds:
+        POPG H2X (35):
+          total: .nan
+        POPG H2Y (36):
+          total: .nan
+    POPG C23 (37):
+      total: .nan
+      bonds:
+        POPG H3R (38):
+          total: .nan
+        POPG H3S (39):
+          total: .nan
+    POPG C24 (40):
+      total: .nan
+      bonds:
+        POPG H4R (41):
+          total: .nan
+        POPG H4S (42):
+          total: .nan
+    POPG C25 (43):
+      total: .nan
+      bonds:
+        POPG H5R (44):
+          total: .nan
+        POPG H5S (45):
+          total: .nan
+    POPG C26 (46):
+      total: .nan
+      bonds:
+        POPG H6R (47):
+          total: .nan
+        POPG H6S (48):
+          total: .nan
+    POPG C27 (49):
+      total: .nan
+      bonds:
+        POPG H7R (50):
+          total: .nan
+        POPG H7S (51):
+          total: .nan
+    POPG C28 (52):
+      total: .nan
+      bonds:
+        POPG H8R (53):
+          total: .nan
+        POPG H8S (54):
+          total: .nan
+    POPG C29 (55):
+      total: .nan
+      bonds:
+        POPG H91 (56):
+          total: .nan
+    POPG C210 (57):
+      total: .nan
+      bonds:
+        POPG H101 (58):
+          total: .nan
+    POPG C211 (59):
+      total: .nan
+      bonds:
+        POPG H11R (60):
+          total: .nan
+        POPG H11S (61):
+          total: .nan
+    POPG C212 (62):
+      total: .nan
+      bonds:
+        POPG H12R (63):
+          total: .nan
+        POPG H12S (64):
+          total: .nan
+    POPG C213 (65):
+      total: .nan
+      bonds:
+        POPG H13R (66):
+          total: .nan
+        POPG H13S (67):
+          total: .nan
+    POPG C214 (68):
+      total: .nan
+      bonds:
+        POPG H14R (69):
+          total: .nan
+        POPG H14S (70):
+          total: .nan
+    POPG C215 (71):
+      total: .nan
+      bonds:
+        POPG H15R (72):
+          total: .nan
+        POPG H15S (73):
+          total: .nan
+    POPG C216 (74):
+      total: .nan
+      bonds:
+        POPG H16R (75):
+          total: .nan
+        POPG H16S (76):
+          total: .nan
+    POPG C217 (77):
+      total: .nan
+      bonds:
+        POPG H17R (78):
+          total: .nan
+        POPG H17S (79):
+          total: .nan
+    POPG C218 (80):
+      total: .nan
+      bonds:
+        POPG H18R (81):
+          total: .nan
+        POPG H18S (82):
+          total: .nan
+        POPG H18T (83):
+          total: .nan
+    POPG C33 (84):
+      total: .nan
+      bonds:
+        POPG H3X (85):
+          total: .nan
+        POPG H3Y (86):
+          total: .nan
+    POPG C34 (87):
+      total: .nan
+      bonds:
+        POPG H4X (88):
+          total: .nan
+        POPG H4Y (89):
+          total: .nan
+    POPG C35 (90):
+      total: .nan
+      bonds:
+        POPG H5X (91):
+          total: .nan
+        POPG H5Y (92):
+          total: .nan
+    POPG C36 (93):
+      total: .nan
+      bonds:
+        POPG H6X (94):
+          total: .nan
+        POPG H6Y (95):
+          total: .nan
+    POPG C37 (96):
+      total: .nan
+      bonds:
+        POPG H7X (97):
+          total: .nan
+        POPG H7Y (98):
+          total: .nan
+    POPG C38 (99):
+      total: .nan
+      bonds:
+        POPG H8X (100):
+          total: .nan
+        POPG H8Y (101):
+          total: .nan
+    POPG C39 (102):
+      total: .nan
+      bonds:
+        POPG H9X (103):
+          total: .nan
+        POPG H9Y (104):
+          total: .nan
+    POPG C310 (105):
+      total: .nan
+      bonds:
+        POPG H10X (106):
+          total: .nan
+        POPG H10Y (107):
+          total: .nan
+    POPG C311 (108):
+      total: .nan
+      bonds:
+        POPG H11X (109):
+          total: .nan
+        POPG H11Y (110):
+          total: .nan
+    POPG C312 (111):
+      total: .nan
+      bonds:
+        POPG H12X (112):
+          total: .nan
+        POPG H12Y (113):
+          total: .nan
+    POPG C313 (114):
+      total: .nan
+      bonds:
+        POPG H13X (115):
+          total: .nan
+        POPG H13Y (116):
+          total: .nan
+    POPG C314 (117):
+      total: .nan
+      bonds:
+        POPG H14X (118):
+          total: .nan
+        POPG H14Y (119):
+          total: .nan
+    POPG C315 (120):
+      total: .nan
+      bonds:
+        POPG H15X (121):
+          total: .nan
+        POPG H15Y (122):
+          total: .nan
+    POPG C316 (123):
+      total: .nan
+      bonds:
+        POPG H16X (124):
+          total: .nan
+        POPG H16Y (125):
+          total: .nan
+        POPG H16Z (126):
+          total: .nan

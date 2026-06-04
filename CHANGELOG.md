@@ -1,3 +1,8 @@
+## Version 1.5.0
+- Molecule director can be now used as membrane normal for individual molecules. This can be useful when analyzing membranes in gel phase. Read more in [the manual](https://vachalab.github.io/gorder-manual/membrane_normal.html#individual-membrane-normal).
+- Basic geometries can be now used to construct more complex, composite geometry selections. Read more in [the manual](https://vachalab.github.io/gorder-manual/composite_geometry.html).
+- Fixed [Issue 20](https://github.com/VachaLab/gorder/issues/20).
+
 ## Version 1.4.1
 ### Bug fixes
 - Fixed a bug where the `collect`/`export` keyword would not be parsed correctly if its value was `false`.

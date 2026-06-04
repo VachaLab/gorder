@@ -186,6 +186,7 @@ fn gorder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // module: membrane_normal
     let membrane_normal = PyModule::new(m.py(), "membrane_normal")?;
     membrane_normal.add_class::<normal::DynamicNormal>()?;
+    membrane_normal.add_class::<normal::IndividualNormal>()?;
     m.add_submodule(&membrane_normal)?;
 
     // module: leaflets
@@ -209,6 +210,9 @@ fn gorder(m: &Bound<'_, PyModule>) -> PyResult<()> {
     geometry.add_class::<geometry::Cuboid>()?;
     geometry.add_class::<geometry::Cylinder>()?;
     geometry.add_class::<geometry::Sphere>()?;
+    geometry.add_class::<geometry::And>()?;
+    geometry.add_class::<geometry::Or>()?;
+    geometry.add_class::<geometry::Not>()?;
     m.add_submodule(&geometry)?;
 
     // module: ordermap

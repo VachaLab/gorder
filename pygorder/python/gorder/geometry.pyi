@@ -6,6 +6,21 @@ import typing
 from math import inf
 
 @typing.final
+class And:
+    r"""
+    Combine two geometry selections with logical AND.
+    Bonds will only be selected if they fulfill both selections.
+    
+    Parameters
+    ----------
+    a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+        First geometry selection.
+    b : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+        Second geometry selection.
+    """
+    def __new__(cls, a: typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not], b: typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not], invert: builtins.bool = False) -> And: ...
+
+@typing.final
 class Cuboid:
     r"""
     Calculate order parameters inside a cuboid.
@@ -54,6 +69,35 @@ class Cylinder:
         If `radius` is not positive, `span` is invalid, or `orientation` is not recognized.
     """
     def __new__(cls, radius: builtins.float, orientation: builtins.str, span: typing.Sequence[builtins.float] = [-inf, inf], reference: typing.Union[typing.Sequence[builtins.float], builtins.str, None] = None, invert: builtins.bool = False) -> Cylinder: ...
+
+@typing.final
+class Not:
+    r"""
+    Invert a geometry selection with logical NOT.
+    Bonds will be selected if they are not inside the given geometry.
+    This is equivalent to the invert keyword.
+    
+    Parameters
+    ----------
+    a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+        Geometry selection to invert.
+    """
+    def __new__(cls, a: typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not], invert: builtins.bool = False) -> Not: ...
+
+@typing.final
+class Or:
+    r"""
+    Combine two geometry selections with logical OR.
+    Bonds will be selected if they fulfill any of the two selections.
+    
+    Parameters
+    ----------
+    a : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+        First geometry selection.
+    b : Union[Cuboid, Cylinder, Sphere, And, Or, Not]
+        Second geometry selection.
+    """
+    def __new__(cls, a: typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not], b: typing.Union[gorder.geometry.Sphere, gorder.geometry.Cylinder, gorder.geometry.Cuboid, gorder.geometry.And, gorder.geometry.Or, gorder.geometry.Not], invert: builtins.bool = False) -> Or: ...
 
 @typing.final
 class Sphere:

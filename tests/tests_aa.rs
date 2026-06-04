@@ -12,7 +12,7 @@ use std::{
 };
 
 use approx::assert_relative_eq;
-use gorder::prelude::*;
+use gorder::{input::membrane_normal::IndividualNormal, prelude::*};
 use hashbrown::HashMap;
 use std::io::Write;
 use tempfile::{NamedTempFile, TempDir};
@@ -3616,6 +3616,402 @@ fn test_aa_order_geometry_sphere_dynamic_inverted_multiple_threads() {
 }
 
 #[test]
+fn test_aa_order_composite_geometry_and() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::cuboid(
+                GeomReference::center(),
+                [-1.0, 3.0],
+                [1.0, 4.0],
+                [-3.0, 3.0],
+            )
+            .unwrap(),
+            Geometry::cylinder(
+                [5.0, 3.0, 0.0],
+                4.0,
+                [f32::NEG_INFINITY, f32::INFINITY],
+                Axis::Z,
+            )
+            .unwrap(),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_composite_geometry_and.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_or() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::or(
+            Geometry::sphere(GeomReference::center(), 3.0).unwrap(),
+            Geometry::cuboid(
+                "resid 1",
+                [0.0, 2.0],
+                [-1.0, 1.0],
+                [f32::NEG_INFINITY, f32::INFINITY],
+            )
+            .unwrap(),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_composite_geometry_or.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_not_cuboid() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "element name hydrogen",
+        ))
+        .geometry(Geometry::not(
+            Geometry::cuboid(
+                Vector3D::new(8.0, 2.0, 0.0),
+                [-2.0, 4.0],
+                [-4.0, 1.0],
+                [f32::NEG_INFINITY, f32::INFINITY],
+            )
+            .unwrap(),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_cuboid_square_inverted.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_complex() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::or(
+                Geometry::sphere([6.0, 7.0, 5.0], 3.0).unwrap(),
+                Geometry::cylinder(GeomReference::center(), 3.0, [-3.0, 2.0], Axis::X).unwrap(),
+            ),
+            Geometry::not(
+                Geometry::cuboid(
+                    "resid 145",
+                    [-1.5, 1.5],
+                    [-1.5, 1.5],
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                )
+                .unwrap(),
+            ),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_composite_geometry_complex.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_complex_with_dynamic_references() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::or(
+                Geometry::sphere("resid 143", 5.0).unwrap(),
+                Geometry::cylinder("resid 144", 5.0, [-3.0, 2.0], Axis::X).unwrap(),
+            ),
+            Geometry::not(
+                Geometry::cuboid(
+                    "resid 145",
+                    [-2.0, 2.0],
+                    [-2.0, 2.0],
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                )
+                .unwrap(),
+            ),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_composite_geometry_complex_with_dynamic_references.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_not_inverted() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::not(
+            Geometry::sphere(Vector3D::new(8.0, 2.0, 4.5), 2.5)
+                .unwrap()
+                .with_invert(true),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(path_to_output, "tests/files/aa_order_sphere_static.yaml", 1);
+}
+
+#[test]
+fn test_aa_order_composite_geometry_complex_identical() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::or(
+            Geometry::and(
+                Geometry::cylinder(GeomReference::center(), 3.0, [-1.0, 3.0], Axis::X).unwrap(),
+                Geometry::cylinder(GeomReference::center(), 3.0, [-1.0, 3.0], Axis::X).unwrap(),
+            ),
+            Geometry::or(
+                Geometry::cylinder(GeomReference::center(), 3.0, [-1.0, 3.0], Axis::X).unwrap(),
+                Geometry::not(
+                    Geometry::cylinder(GeomReference::center(), 3.0, [-1.0, 3.0], Axis::X)
+                        .unwrap()
+                        .with_invert(true),
+                ),
+            ),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(path_to_output, "tests/files/aa_order_cylinder_x.yaml", 1);
+}
+
+#[test]
+fn test_aa_order_composite_geometry_empty() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::cylinder(
+                Vector3D::new(8.0, 2.0, 0.0),
+                2.5,
+                [f32::NEG_INFINITY, f32::INFINITY],
+                Axis::Z,
+            )
+            .unwrap(),
+            Geometry::not(
+                Geometry::cylinder(
+                    Vector3D::new(8.0, 2.0, 0.0),
+                    2.5,
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                    Axis::Z,
+                )
+                .unwrap(),
+            ),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_geometry_empty.yaml",
+        1,
+    );
+}
+
+#[test]
+fn test_aa_order_composite_geometry_full() {
+    for reference in [
+        GeomReference::default(),
+        Vector3D::new(2.0, 2.0, 3.0).into(),
+        "@membrane".into(),
+        GeomReference::center(),
+    ] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/pcpepg.tpr")
+            .trajectory("tests/files/pcpepg.xtc")
+            .output(path_to_output)
+            .analysis_type(AnalysisType::aaorder(
+                "@membrane and element name carbon",
+                "@membrane and element name hydrogen",
+            ))
+            .geometry(Geometry::or(
+                Geometry::cylinder(
+                    reference.clone(),
+                    2.5,
+                    [f32::NEG_INFINITY, f32::INFINITY],
+                    Axis::Z,
+                )
+                .unwrap(),
+                Geometry::not(
+                    Geometry::cylinder(reference, 2.5, [f32::NEG_INFINITY, f32::INFINITY], Axis::Z)
+                        .unwrap(),
+                ),
+            ))
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(path_to_output, "tests/files/aa_order_basic.yaml", 1);
+    }
+}
+
+#[test]
+fn test_aa_order_composite_geometry_no_overlap() {
+    let output = NamedTempFile::new().unwrap();
+    let path_to_output = output.path().to_str().unwrap();
+
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .output(path_to_output)
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .geometry(Geometry::and(
+            Geometry::cylinder(
+                GeomReference::center(),
+                2.5,
+                [f32::NEG_INFINITY, f32::INFINITY],
+                Axis::Z,
+            )
+            .unwrap(),
+            Geometry::cuboid(
+                GeomReference::origin(),
+                [0.0, 2.0],
+                [2.0, 3.0],
+                [f32::NEG_INFINITY, f32::INFINITY],
+            )
+            .unwrap(),
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    analysis.run().unwrap().write().unwrap();
+
+    assert_eq_order(
+        path_to_output,
+        "tests/files/aa_order_geometry_empty.yaml",
+        1,
+    );
+}
+
+#[test]
 fn test_aa_order_leaflets_from_file_once_multiple_threads() {
     for n_threads in [1, 2, 5, 8, 16] {
         let output = NamedTempFile::new().unwrap();
@@ -4858,6 +5254,37 @@ fn test_aa_order_buckled_dynamic_membrane_normal_ordermaps_yaml() {
 }
 
 #[test]
+fn test_aa_order_individual_membrane_normal_yaml() {
+    for n_threads in [1, 3, 8, 16] {
+        let output = NamedTempFile::new().unwrap();
+        let path_to_output = output.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/pcpepg.tpr")
+            .trajectory("tests/files/pcpepg.xtc")
+            .output(path_to_output)
+            .analysis_type(AnalysisType::aaorder(
+                "@membrane and element name carbon",
+                "@membrane and element name hydrogen",
+            ))
+            .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_order(
+            path_to_output,
+            "tests/files/aa_order_individual_normals.yaml",
+            1,
+        );
+    }
+}
+
+#[test]
 fn test_aa_order_buckled_leaflets_clustering_yaml() {
     let output = NamedTempFile::new().unwrap();
     let path_to_output = output.path().to_str().unwrap();
@@ -4956,6 +5383,39 @@ fn test_aa_order_buckled_membrane_normals_export() {
         assert_eq_normals(
             path_to_output_normals,
             "tests/files/normals_aa_buckled_min.yaml",
+        );
+    }
+}
+
+#[test]
+fn test_aa_order_buckled_membrane_individual_normals_export() {
+    for n_threads in [1, 2, 3, 8] {
+        let output_normals = NamedTempFile::new().unwrap();
+        let path_to_output_normals = output_normals.path().to_str().unwrap();
+
+        let analysis = Analysis::builder()
+            .structure("tests/files/aa_buckled.tpr")
+            .trajectory("tests/files/aa_buckled.xtc")
+            .analysis_type(AnalysisType::aaorder(
+                "@membrane and element name carbon",
+                "@membrane and element name hydrogen",
+            ))
+            .membrane_normal(
+                IndividualNormal::new("name P", "name C218 C316")
+                    .with_collect(path_to_output_normals),
+            )
+            .end(1630000.0)
+            .n_threads(n_threads)
+            .silent()
+            .overwrite()
+            .build()
+            .unwrap();
+
+        analysis.run().unwrap().write().unwrap();
+
+        assert_eq_normals(
+            path_to_output_normals,
+            "tests/files/individual_normals_aa_buckled_min.yaml",
         );
     }
 }
@@ -5150,6 +5610,61 @@ fn test_aa_order_fail_dynamic_undefined_leaflet_normal() {
             "@membrane and element name hydrogen",
         ))
         .membrane_normal(DynamicNormal::new("name P", 2.0).unwrap())
+        .leaflets(LeafletClassification::individual(
+            "name P",
+            "name C218 C316",
+        ))
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    match analysis.run() {
+        Ok(_) => panic!("Analysis should have failed."),
+        Err(e) => assert!(e.to_string().contains("leaflet classification requires it")),
+    }
+}
+
+#[test]
+fn test_aa_order_fail_individual_undefined_ordermap_plane() {
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
+        .map(
+            OrderMap::builder()
+                .bin_size([1.0, 1.0])
+                .min_samples(5)
+                .build()
+                .unwrap(),
+        )
+        .silent()
+        .overwrite()
+        .build()
+        .unwrap();
+
+    match analysis.run() {
+        Ok(_) => panic!("Analysis should have failed."),
+        Err(e) => assert!(e
+            .to_string()
+            .contains("unable to automatically set ordermap plane")),
+    }
+}
+
+#[test]
+fn test_aa_order_fail_individual_undefined_leaflet_normal() {
+    let analysis = Analysis::builder()
+        .structure("tests/files/pcpepg.tpr")
+        .trajectory("tests/files/pcpepg.xtc")
+        .analysis_type(AnalysisType::aaorder(
+            "@membrane and element name carbon",
+            "@membrane and element name hydrogen",
+        ))
+        .membrane_normal(IndividualNormal::new("name P", "name C218 C316"))
         .leaflets(LeafletClassification::individual(
             "name P",
             "name C218 C316",

@@ -14,7 +14,10 @@ use nalgebra::{DMatrix, SVD};
 use once_cell::sync::OnceCell;
 
 use crate::{
-    analysis::{common::interleave_vectors, topology::molecule::handle_moltypes},
+    analysis::{
+        common::{get_reference_methyls, interleave_vectors},
+        topology::molecule::handle_moltypes,
+    },
     errors::{AnalysisError, DynamicNormalError, ManualNormalError, TopologyError},
     input::{Collect, MembraneNormal},
     PANIC_MESSAGE,
@@ -32,6 +35,7 @@ pub(crate) enum MoleculeMembraneNormal {
     Static(Vector3D),
     Dynamic(DynamicMembraneNormal),
     Manual(ManualMembraneNormal),
+    Individual(IndividualMembraneNormal),
 }
 
 impl From<&MembraneNormal> for MoleculeMembraneNormal {
@@ -49,6 +53,24 @@ impl From<&MembraneNormal> for MoleculeMembraneNormal {
                 Self::Dynamic(DynamicMembraneNormal {
                     heads: Vec::new(),
                     radius: params.radius(),
+                    normals: Vec::new(),
+                    storage: if setup_storage {
+                        Some(Default::default())
+                    } else {
+                        None
+                    },
+                })
+            }
+            MembraneNormal::Individual(params) => {
+                // requested collecting individual membrane normals
+                let setup_storage = match params.collect() {
+                    Collect::Boolean(false) => false,
+                    Collect::Boolean(true) | Collect::File(_) => true,
+                };
+
+                Self::Individual(IndividualMembraneNormal {
+                    heads: Vec::new(),
+                    methyls: Vec::new(),
                     normals: Vec::new(),
                     storage: if setup_storage {
                         Some(Default::default())
@@ -83,6 +105,7 @@ impl MoleculeMembraneNormal {
             Self::Static(vector) => Ok(vector),
             Self::Dynamic(dynamic) => dynamic.get_normal(molecule_index, system, pbc_handler),
             Self::Manual(manual) => manual.get_normal(frame_index, molecule_index),
+            Self::Individual(individual) => individual.get_normal(molecule_index, system, pbc_handler),
         }
     }
 
@@ -93,6 +116,7 @@ impl MoleculeMembraneNormal {
         match self {
             Self::Static(_) | Self::Manual(_) => Ok(()),
             Self::Dynamic(dynamic) => dynamic.insert(indices, system),
+            Self::Individual(individual) => individual.insert(indices, system),
         }
     }
 
@@ -103,6 +127,7 @@ impl MoleculeMembraneNormal {
         match self {
             Self::Static(_) | Self::Manual(_) => (),
             Self::Dynamic(dynamic) => dynamic.reset_normals(),
+            Self::Individual(individual) => individual.reset_normals(),
         }
     }
 
@@ -112,6 +137,7 @@ impl MoleculeMembraneNormal {
         match self {
             Self::Static(_) | Self::Manual(_) => (),
             Self::Dynamic(dynamic) => dynamic.store_normals(),
+            Self::Individual(individual) => individual.store_normals(),
         }
     }
 }
@@ -121,9 +147,12 @@ impl Add for MoleculeMembraneNormal {
 
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            // adding molecule membrane normals is only needed for dynamic membrane normals
+            // adding molecule membrane normals is only needed for dynamic and individual membrane normals
             (MoleculeMembraneNormal::Dynamic(x), MoleculeMembraneNormal::Dynamic(y)) => {
                 MoleculeMembraneNormal::Dynamic(x + y)
+            }
+            (MoleculeMembraneNormal::Individual(x), MoleculeMembraneNormal::Individual(y)) => {
+                MoleculeMembraneNormal::Individual(x + y)
             }
             (other, _) => other,
         }
@@ -155,7 +184,7 @@ impl DynamicMembraneNormal {
         Ok(())
     }
 
-    /// Get membrane normal calculated for a molecule or calculate it it has not been already calculated.
+    /// Get membrane normal calculated for a molecule or calculate it if it has not been already calculated.
     #[inline]
     fn get_normal<'a>(
         &mut self,
@@ -256,7 +285,7 @@ impl Add for DynamicMembraneNormal {
 }
 
 #[derive(Debug, Clone)]
-pub(super) struct ManualMembraneNormal {
+pub(crate) struct ManualMembraneNormal {
     normals: Option<Vec<Vec<Vector3D>>>,
     step: usize,
 }
@@ -335,6 +364,153 @@ impl ManualMembraneNormal {
         }
 
         Ok(normals_for_molecule.clone())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct IndividualMembraneNormal {
+    /// Indices of headgroup identifiers (one per molecule).
+    heads: Vec<usize>,
+    /// Indices of methyl identifiers (any number per molecule).
+    methyls: Vec<Vec<usize>>,
+    /// Membrane normals calculated for each molecule.
+    normals: Vec<OnceCell<Vector3D>>,
+    /// Storage for membrane normals.
+    storage: Option<NormalsStorage>,
+}
+
+impl IndividualMembraneNormal {
+    /// Add a new molecule into the individual membrane normal estimator.
+    #[inline(always)]
+    fn insert(&mut self, molecule: &Group, system: &System) -> Result<(), TopologyError> {
+        self.heads.push(get_reference_head(
+            molecule,
+            system,
+            group_name!("NormalHeads"),
+        )?);
+
+        self.methyls.push(get_reference_methyls(
+            molecule,
+            system,
+            group_name!("NormalMethyls"),
+        )?);
+
+        self.normals.push(OnceCell::new());
+        Ok(())
+    }
+
+    /// Get membrane normal calculated for a molecule or calculate it.
+    #[inline]
+    fn get_normal<'a>(
+        &mut self,
+        index: usize,
+        system: &'a System,
+        pbc: &'a impl PBCHandler<'a>,
+    ) -> Result<&Vector3D, AnalysisError> {
+        let normal = self.normals.get_mut(index)
+            .unwrap_or_else(||
+                panic!("FATAL GORDER ERROR | IndividualMembraneNormal::get_normal | Molecule not found. Molecule with internal `gorder` index `{}` should exist. {}", 
+                    index, PANIC_MESSAGE))
+            .get_or_try_init(|| {
+                Self::calculate_normal(*self.heads.get(index).expect(PANIC_MESSAGE), self.methyls.get(index).expect(PANIC_MESSAGE), system, pbc)
+            })?;
+
+        Ok(normal)
+    }
+
+    /// Calculate molecule director to be used as membrane normal for the specified atom.
+    // Cold because this function gets called only once per frame and molecule, but `get_normal` gets called many times more often.
+    #[cold]
+    fn calculate_normal<'a>(
+        head: usize,
+        methyls: &[usize],
+        system: &'a System,
+        pbc: &'a impl PBCHandler<'a>,
+    ) -> Result<Vector3D, AnalysisError> {
+        let head = system.get_atom(head)
+            .unwrap_or_else(|_|
+                panic!("FATAL GORDER ERROR | IndividualMembraneNormal::calculate_normal | Head atom not found. Atom with index `{}` should exist. {}", 
+                    head, PANIC_MESSAGE));
+        
+        let head_pos = head.get_position().ok_or_else(|| AnalysisError::UndefinedPosition(head.get_index()))?;
+
+        let mut total_vector = Vector3D::default();
+        for methyl_index in methyls {
+            let methyl = system.get_atom(*methyl_index)
+                .unwrap_or_else(|_| 
+                    panic!("FATAL GORDER ERROR | IndividualMembraneNormal::calculate_normal | Methyl atom not found. Atom with index `{}` should exist. {}", 
+                        methyl_index, PANIC_MESSAGE));
+            
+            let methyl_pos = methyl.get_position().ok_or_else(|| AnalysisError::UndefinedPosition(methyl.get_index()))?;
+
+            let vector = pbc.vector_to(methyl_pos, head_pos);
+            total_vector.x += vector.x;
+            total_vector.y += vector.y;
+            total_vector.z += vector.z;
+        }
+
+        let n_methyls = methyls.len() as f32;
+        Ok(Vector3D::new(
+            total_vector.x / n_methyls, 
+            total_vector.y / n_methyls, 
+            total_vector.z / n_methyls
+            ).to_unit())
+    }
+
+    /// Reset membrane normals.
+    #[inline(always)]
+    fn reset_normals(&mut self) {
+        self.normals
+            .iter_mut()
+            .for_each(|cell| *cell = OnceCell::new());
+    }
+
+    /// Store membrane normals, if requested.
+    /// Missing membrane normals are considered to be [NAN, NAN, NAN].
+    fn store_normals(&mut self) {
+        if let Some(storage) = self.storage.as_mut() {
+            let mut normals = Vec::with_capacity(self.heads.len());
+
+            for raw_normal in self.normals.iter() {
+                let normal = raw_normal
+                    .get()
+                    // if the membrane normal was not calculated for this molecule, return a vector of NANs
+                    // the alternative would be to calculate it post-hoc but that is more complicated to implement
+                    .unwrap_or(&Vector3D::new(f32::NAN, f32::NAN, f32::NAN))
+                    .clone();
+                normals.push(normal);
+            }
+
+            storage.normals.push(normals);
+        }
+    }
+
+    pub(crate) fn extract_storage(&self) -> Option<Vec<Vec<Vector3D>>> {
+        self.storage.as_ref().map(|x| x.normals.clone())
+    }
+}
+
+impl Add for IndividualMembraneNormal {
+    type Output = IndividualMembraneNormal;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        // adding is only needed if storage is set
+        if self.storage.is_none() {
+            return self;
+        }
+
+        match (self.storage, rhs.storage) {
+            (Some(x), Some(y)) => Self {
+                heads: self.heads,
+                methyls: self.methyls,
+                normals: self.normals,
+                storage: Some(x + y),
+            },
+            (_, _) => unreachable!(
+                "FATAL GORDER ERROR | IndividualMembraneNormal::add | Unreachable pattern reached. {}",
+                PANIC_MESSAGE
+            ),
+        }
     }
 }
 

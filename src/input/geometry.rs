@@ -15,12 +15,14 @@ use crate::errors::GeometryConfigError;
 use super::Axis;
 
 /// Specification of the geometric shape in which bonds should be positioned to be considered.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone)]
 pub enum Geometry {
     Cuboid(CuboidSelection),
     Cylinder(CylinderSelection),
     Sphere(SphereSelection),
+    And(Box<Geometry>, Box<Geometry>),
+    Or(Box<Geometry>, Box<Geometry>),
+    Not(Box<Geometry>),
 }
 
 impl Geometry {
@@ -108,9 +110,35 @@ impl Geometry {
             Geometry::Cuboid(x) => x.invert = invert,
             Geometry::Cylinder(x) => x.invert = invert,
             Geometry::Sphere(x) => x.invert = invert,
+            _ => {}
+        }
+        if invert {
+            self = match self {
+                Geometry::And(_, _) | Geometry::Or(_, _) => Geometry::Not(Box::new(self)),
+                Geometry::Not(x) => *x,
+                other => other,
+            };
         }
 
         self
+    }
+
+    /// Construct a geometry from two geometries, using logical AND.
+    #[inline(always)]
+    pub fn and(a: Self, b: Self) -> Self {
+        Geometry::And(Box::from(a), Box::from(b))
+    }
+
+    /// Construct a geometry from two geometries, using logical OR.
+    #[inline(always)]
+    pub fn or(a: Self, b: Self) -> Self {
+        Geometry::Or(Box::from(a), Box::from(b))
+    }
+
+    /// Invert the geometry.
+    #[inline(always)]
+    pub fn not(a: Self) -> Self {
+        Geometry::Not(Box::from(a))
     }
 
     /// Check that the geometry selection makes sense.
@@ -137,6 +165,17 @@ impl Geometry {
                     return Err(GeometryConfigError::InvalidRadius(x.radius));
                 }
             }
+            Self::And(x, y) => {
+                x.validate()?;
+                y.validate()?;
+            }
+            Self::Or(x, y) => {
+                x.validate()?;
+                y.validate()?;
+            }
+            Self::Not(x) => {
+                x.validate()?;
+            }
         }
 
         Ok(())
@@ -148,6 +187,91 @@ impl Geometry {
             Self::Cuboid(cuboid) => cuboid.reference.uses_box_center(),
             Self::Cylinder(cylinder) => cylinder.reference.uses_box_center(),
             Self::Sphere(sphere) => sphere.reference.uses_box_center(),
+            Self::And(x, y) => x.uses_box_center() || y.uses_box_center(),
+            Self::Or(x, y) => x.uses_box_center() || y.uses_box_center(),
+            Self::Not(x) => x.uses_box_center(),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Geometry {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = serde_yaml::Value::deserialize(deserializer)?;
+
+        let tagged = match value {
+            serde_yaml::Value::Tagged(tagged) => *tagged,
+            _ => {
+                return Err(serde::de::Error::custom(
+                    "expected a tagged Geometry variant",
+                ))
+            }
+        };
+
+        match tagged.tag.to_string().as_str() {
+            "!Cuboid" => serde_yaml::from_value(tagged.value)
+                .map(Geometry::Cuboid)
+                .map_err(serde::de::Error::custom),
+            "!Cylinder" => serde_yaml::from_value(tagged.value)
+                .map(Geometry::Cylinder)
+                .map_err(serde::de::Error::custom),
+            "!Sphere" => serde_yaml::from_value(tagged.value)
+                .map(Geometry::Sphere)
+                .map_err(serde::de::Error::custom),
+            "!And" => {
+                let (a, b): (Geometry, Geometry) =
+                    serde_yaml::from_value(tagged.value).map_err(serde::de::Error::custom)?;
+                Ok(Geometry::And(Box::new(a), Box::new(b)))
+            }
+            "!Or" => {
+                let (a, b): (Geometry, Geometry) =
+                    serde_yaml::from_value(tagged.value).map_err(serde::de::Error::custom)?;
+                Ok(Geometry::Or(Box::new(a), Box::new(b)))
+            }
+            "!Not" => {
+                let (inner,): (Geometry,) =
+                    serde_yaml::from_value(tagged.value).map_err(serde::de::Error::custom)?;
+                Ok(Geometry::Not(Box::new(inner)))
+            }
+            other => Err(serde::de::Error::custom(format!(
+                "unknown Geometry variant: {other}"
+            ))),
+        }
+    }
+}
+
+impl Serialize for Geometry {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeTupleVariant;
+
+        match self {
+            Geometry::Cuboid(x) => serializer.serialize_newtype_variant("Geometry", 0, "Cuboid", x),
+            Geometry::Cylinder(x) => {
+                serializer.serialize_newtype_variant("Geometry", 1, "Cylinder", x)
+            }
+            Geometry::Sphere(x) => serializer.serialize_newtype_variant("Geometry", 2, "Sphere", x),
+            Geometry::And(a, b) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 3, "And", 2)?;
+                tv.serialize_field(a)?;
+                tv.serialize_field(b)?;
+                tv.end()
+            }
+            Geometry::Or(a, b) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 4, "Or", 2)?;
+                tv.serialize_field(a)?;
+                tv.serialize_field(b)?;
+                tv.end()
+            }
+            Geometry::Not(x) => {
+                let mut tv = serializer.serialize_tuple_variant("Geometry", 5, "Not", 1)?;
+                tv.serialize_field(x)?;
+                tv.end()
+            }
         }
     }
 }
@@ -652,6 +776,564 @@ mod pass_tests {
                 assert_relative_eq!(sphere.radius, 7.4);
             }
             _ => panic!("Unexpected geometry constructed."),
+        }
+    }
+
+    fn cuboid_with_ref(reference: GeomReference) -> Geometry {
+        Geometry::Cuboid(CuboidSelection {
+            reference,
+            xdim: [-1.0, 1.0],
+            ydim: [-1.0, 1.0],
+            zdim: [-1.0, 1.0],
+            invert: false,
+        })
+    }
+
+    fn sphere_with_ref(reference: GeomReference) -> Geometry {
+        Geometry::Sphere(SphereSelection {
+            reference,
+            radius: 1.0,
+            invert: false,
+        })
+    }
+
+    fn cylinder_with_ref(reference: GeomReference) -> Geometry {
+        Geometry::Cylinder(CylinderSelection {
+            reference,
+            radius: 1.0,
+            span: [-1.0, 1.0],
+            orientation: Axis::Z,
+            invert: false,
+        })
+    }
+
+    fn simple_sphere() -> Geometry {
+        sphere_with_ref(GeomReference::origin())
+    }
+
+    #[test]
+    fn uses_box_center_cuboid_point() {
+        let geom = cuboid_with_ref(GeomReference::origin());
+        assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_cuboid_selection() {
+        let geom = cuboid_with_ref(GeomReference::from("resname LIG"));
+        assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_cuboid_center() {
+        let geom = cuboid_with_ref(GeomReference::center());
+        assert!(geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_cylinder_point() {
+        let geom = cylinder_with_ref(GeomReference::origin());
+        assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_cylinder_center() {
+        let geom = cylinder_with_ref(GeomReference::center());
+        assert!(geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_sphere_point() {
+        let geom = sphere_with_ref(GeomReference::origin());
+        assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_sphere_center() {
+        let geom = sphere_with_ref(GeomReference::center());
+        assert!(geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_and_both_false() {
+        let a = sphere_with_ref(GeomReference::origin());
+        let b = cuboid_with_ref(GeomReference::origin());
+        assert!(!Geometry::and(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_and_left_true() {
+        let a = sphere_with_ref(GeomReference::center());
+        let b = cuboid_with_ref(GeomReference::origin());
+        assert!(Geometry::and(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_and_right_true() {
+        let a = sphere_with_ref(GeomReference::origin());
+        let b = cuboid_with_ref(GeomReference::center());
+        assert!(Geometry::and(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_and_both_true() {
+        let a = sphere_with_ref(GeomReference::center());
+        let b = cuboid_with_ref(GeomReference::center());
+        assert!(Geometry::and(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_or_both_false() {
+        let a = sphere_with_ref(GeomReference::origin());
+        let b = cuboid_with_ref(GeomReference::origin());
+        assert!(!Geometry::or(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_or_one_true() {
+        let a = sphere_with_ref(GeomReference::center());
+        let b = cuboid_with_ref(GeomReference::origin());
+        assert!(Geometry::or(a, b).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_not_false() {
+        let inner = sphere_with_ref(GeomReference::origin());
+        assert!(!Geometry::not(inner).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_not_true() {
+        let inner = sphere_with_ref(GeomReference::center());
+        assert!(Geometry::not(inner).uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_nested() {
+        // Not(And(Sphere(origin), Or(Cuboid(center), Cylinder(origin))))
+        let a = sphere_with_ref(GeomReference::origin());
+        let b = cuboid_with_ref(GeomReference::center());
+        let c = cylinder_with_ref(GeomReference::origin());
+        let geom = Geometry::not(Geometry::and(a, Geometry::or(b, c)));
+        assert!(geom.uses_box_center());
+    }
+
+    #[test]
+    fn uses_box_center_nested_all_point() {
+        let a = sphere_with_ref(GeomReference::origin());
+        let b = cuboid_with_ref(GeomReference::origin());
+        let c = cylinder_with_ref(GeomReference::origin());
+        let geom = Geometry::not(Geometry::and(a, Geometry::or(b, c)));
+        assert!(!geom.uses_box_center());
+    }
+
+    #[test]
+    fn with_invert_cuboid_true() {
+        let geom = cuboid_with_ref(GeomReference::origin()).with_invert(true);
+        match geom {
+            Geometry::Cuboid(c) => assert!(c.invert),
+            _ => panic!("Expected Cuboid"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cuboid_false() {
+        let mut geom = cuboid_with_ref(GeomReference::origin());
+        if let Geometry::Cuboid(ref mut c) = geom {
+            c.invert = true;
+        }
+        let geom = geom.with_invert(false);
+        match geom {
+            Geometry::Cuboid(c) => assert!(!c.invert),
+            _ => panic!("Expected Cuboid"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cylinder_true() {
+        let geom = cylinder_with_ref(GeomReference::origin()).with_invert(true);
+        match geom {
+            Geometry::Cylinder(c) => assert!(c.invert),
+            _ => panic!("Expected Cylinder"),
+        }
+    }
+
+    #[test]
+    fn with_invert_cylinder_false() {
+        let geom = cylinder_with_ref(GeomReference::origin()).with_invert(false);
+        match geom {
+            Geometry::Cylinder(c) => assert!(!c.invert),
+            _ => panic!("Expected Cylinder"),
+        }
+    }
+
+    #[test]
+    fn with_invert_sphere_true() {
+        let geom = simple_sphere().with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => assert!(s.invert),
+            _ => panic!("Expected Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_sphere_false() {
+        let geom = simple_sphere().with_invert(false);
+        match geom {
+            Geometry::Sphere(s) => assert!(!s.invert),
+            _ => panic!("Expected Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_true_wraps_in_not() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere()).with_invert(true);
+        match geom {
+            Geometry::Not(inner) => match *inner {
+                Geometry::And(_, _) => {}
+                _ => panic!("Expected And inside Not"),
+            },
+            _ => panic!("Expected Not wrapping And"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_false_unchanged() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::And(_, _) => {}
+            _ => panic!("Expected And to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_or_true_wraps_in_not() {
+        let geom = Geometry::or(simple_sphere(), simple_sphere()).with_invert(true);
+        match geom {
+            Geometry::Not(inner) => match *inner {
+                Geometry::Or(_, _) => {}
+                _ => panic!("Expected Or inside Not"),
+            },
+            _ => panic!("Expected Not wrapping Or"),
+        }
+    }
+
+    #[test]
+    fn with_invert_or_false_unchanged() {
+        let geom = Geometry::or(simple_sphere(), simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::Or(_, _) => {}
+            _ => panic!("Expected Or to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_not_true_unwraps() {
+        let inner = simple_sphere();
+        let geom = Geometry::not(inner).with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => {
+                // The inner sphere should be returned as-is
+                assert_relative_eq!(s.radius, 1.0);
+            }
+            _ => panic!("Expected Not to be unwrapped into Sphere"),
+        }
+    }
+
+    #[test]
+    fn with_invert_not_false_unchanged() {
+        let geom = Geometry::not(simple_sphere()).with_invert(false);
+        match geom {
+            Geometry::Not(_) => {}
+            _ => panic!("Expected Not to remain unchanged"),
+        }
+    }
+
+    #[test]
+    fn with_invert_double_invert_sphere() {
+        let geom = simple_sphere().with_invert(true).with_invert(true);
+        match geom {
+            Geometry::Sphere(s) => assert!(s.invert),
+            _ => panic!("Expected Sphere after double invert"),
+        }
+    }
+
+    #[test]
+    fn with_invert_and_double_invert_roundtrips() {
+        let geom = Geometry::and(simple_sphere(), simple_sphere())
+            .with_invert(true)
+            .with_invert(true);
+        match geom {
+            Geometry::And(_, _) => {}
+            _ => panic!("Expected And after double invert, got {:?}", geom),
+        }
+    }
+
+    #[test]
+    fn test_not_yaml() {
+        let string = "!Not
+    - !Sphere
+      reference: \"Protein\"
+      radius: 2.5";
+
+        match serde_yaml::from_str(string).unwrap() {
+            Geometry::Not(inner) => match *inner {
+                Geometry::Sphere(sphere) => {
+                    match sphere.reference {
+                        GeomReference::Selection(s) => assert_eq!(s, "Protein"),
+                        _ => panic!("Unexpected geometry reference."),
+                    }
+                    assert_relative_eq!(sphere.radius, 2.5);
+                }
+                _ => panic!("Expected Sphere inside Not."),
+            },
+            _ => panic!("Expected Not geometry."),
+        }
+    }
+
+    #[test]
+    fn test_and_yaml() {
+        let string = "!And
+      - !Sphere
+        reference: [1.0, 2.0, 3.0]
+        radius: 1.5
+      - !Cuboid
+        dim_x: [-1.0, 1.0]
+        ydim: [-2.0, 2.0]
+        zdim: [-3.0, 3.0]";
+
+        match serde_yaml::from_str(string).unwrap() {
+            Geometry::And(a, b) => {
+                match *a {
+                    Geometry::Sphere(sphere) => {
+                        match sphere.reference {
+                            GeomReference::Point(p) => {
+                                assert_relative_eq!(p.x, 1.0);
+                                assert_relative_eq!(p.y, 2.0);
+                                assert_relative_eq!(p.z, 3.0);
+                            }
+                            _ => panic!("Expected Point reference."),
+                        }
+                        assert_relative_eq!(sphere.radius, 1.5);
+                    }
+                    _ => panic!("Expected Sphere as first operand."),
+                }
+                match *b {
+                    Geometry::Cuboid(cuboid) => {
+                        assert_relative_eq!(cuboid.xdim[0], -1.0);
+                        assert_relative_eq!(cuboid.xdim[1], 1.0);
+                        assert_relative_eq!(cuboid.ydim[0], -2.0);
+                        assert_relative_eq!(cuboid.ydim[1], 2.0);
+                        assert_relative_eq!(cuboid.zdim[0], -3.0);
+                        assert_relative_eq!(cuboid.zdim[1], 3.0);
+                    }
+                    _ => panic!("Expected Cuboid as second operand."),
+                }
+            }
+            _ => panic!("Expected And geometry."),
+        }
+    }
+
+    #[test]
+    fn test_or_yaml() {
+        let string = "!Or
+      - !Cylinder
+        radius: 3.0
+        span: [-5.0, 5.0]
+        orientation: z
+      - !Sphere
+        radius: 0.5";
+
+        match serde_yaml::from_str(string).unwrap() {
+            Geometry::Or(a, b) => {
+                match *a {
+                    Geometry::Cylinder(cyl) => {
+                        assert_relative_eq!(cyl.radius, 3.0);
+                        assert_relative_eq!(cyl.span[0], -5.0);
+                        assert_relative_eq!(cyl.span[1], 5.0);
+                    }
+                    _ => panic!("Expected Cylinder as first operand."),
+                }
+                match *b {
+                    Geometry::Sphere(sphere) => {
+                        assert_relative_eq!(sphere.radius, 0.5);
+                        // default reference should be origin
+                        match sphere.reference {
+                            GeomReference::Point(p) => {
+                                assert_relative_eq!(p.x, 0.0);
+                                assert_relative_eq!(p.y, 0.0);
+                                assert_relative_eq!(p.z, 0.0);
+                            }
+                            _ => panic!("Expected default Point reference."),
+                        }
+                    }
+                    _ => panic!("Expected Sphere as second operand."),
+                }
+            }
+            _ => panic!("Expected Or geometry."),
+        }
+    }
+
+    #[test]
+    fn test_nested_and_or_yaml() {
+        let string = "!And
+      - !Or
+        - !Sphere
+          radius: 1.0
+        - !Sphere
+          radius: 2.0
+      - !Not
+        - !Cuboid
+          dim_x: [-1.0, 1.0]
+          ydim: [-1.0, 1.0]
+          zdim: [-1.0, 1.0]";
+
+        match serde_yaml::from_str(string).unwrap() {
+            Geometry::And(a, b) => {
+                match *a {
+                    Geometry::Or(_, _) => {}
+                    _ => panic!("Expected Or as first operand."),
+                }
+                match *b {
+                    Geometry::Not(inner) => match *inner {
+                        Geometry::Cuboid(_) => {}
+                        _ => panic!("Expected Cuboid inside Not."),
+                    },
+                    _ => panic!("Expected Not as second operand."),
+                }
+            }
+            _ => panic!("Expected And geometry."),
+        }
+    }
+
+    /// Serialize then deserialize a Geometry and check the structure matches.
+    fn round_trip(geom: &Geometry) -> Geometry {
+        let yaml = serde_yaml::to_string(geom).expect("failed to serialize");
+        serde_yaml::from_str(&yaml).expect("failed to deserialize")
+    }
+
+    #[test]
+    fn round_trip_cuboid() {
+        let geom =
+            Geometry::cuboid([1.0, 2.0, 3.0], [-1.0, 1.0], [-2.0, 2.0], [-3.0, 3.0]).unwrap();
+        match round_trip(&geom) {
+            Geometry::Cuboid(c) => {
+                assert_relative_eq!(c.xdim[0], -1.0);
+                assert_relative_eq!(c.xdim[1], 1.0);
+                assert_relative_eq!(c.ydim[0], -2.0);
+                assert_relative_eq!(c.ydim[1], 2.0);
+                assert_relative_eq!(c.zdim[0], -3.0);
+                assert_relative_eq!(c.zdim[1], 3.0);
+            }
+            _ => panic!("Expected Cuboid after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_sphere() {
+        let geom = Geometry::sphere([0.0, 0.0, 0.0], 5.0).unwrap();
+        match round_trip(&geom) {
+            Geometry::Sphere(s) => {
+                assert_relative_eq!(s.radius, 5.0);
+            }
+            _ => panic!("Expected Sphere after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_not() {
+        let inner = Geometry::sphere([1.0, 2.0, 3.0], 2.5).unwrap();
+        let geom = Geometry::not(inner);
+        match round_trip(&geom) {
+            Geometry::Not(inner) => match *inner {
+                Geometry::Sphere(s) => {
+                    assert_relative_eq!(s.radius, 2.5);
+                    match s.reference {
+                        GeomReference::Point(p) => {
+                            assert_relative_eq!(p.x, 1.0);
+                            assert_relative_eq!(p.y, 2.0);
+                            assert_relative_eq!(p.z, 3.0);
+                        }
+                        _ => panic!("Expected Point reference"),
+                    }
+                }
+                _ => panic!("Expected Sphere inside Not"),
+            },
+            _ => panic!("Expected Not after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_and() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 1.0).unwrap();
+        let b = Geometry::sphere([1.0, 1.0, 1.0], 2.0).unwrap();
+        let geom = Geometry::and(a, b);
+        match round_trip(&geom) {
+            Geometry::And(a, b) => {
+                match *a {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 1.0),
+                    _ => panic!("Expected Sphere as first operand"),
+                }
+                match *b {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 2.0),
+                    _ => panic!("Expected Sphere as second operand"),
+                }
+            }
+            _ => panic!("Expected And after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_or() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 3.0).unwrap();
+        let b = Geometry::sphere([0.0, 0.0, 0.0], 4.0).unwrap();
+        let geom = Geometry::or(a, b);
+        match round_trip(&geom) {
+            Geometry::Or(a, b) => {
+                match *a {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 3.0),
+                    _ => panic!("Expected Sphere as first operand"),
+                }
+                match *b {
+                    Geometry::Sphere(s) => assert_relative_eq!(s.radius, 4.0),
+                    _ => panic!("Expected Sphere as second operand"),
+                }
+            }
+            _ => panic!("Expected Or after round-trip"),
+        }
+    }
+
+    #[test]
+    fn round_trip_nested() {
+        let a = Geometry::sphere([0.0, 0.0, 0.0], 1.0).unwrap();
+        let b = Geometry::sphere([0.0, 0.0, 0.0], 2.0).unwrap();
+        let c = Geometry::sphere([0.0, 0.0, 0.0], 3.0).unwrap();
+        // Not(And(a, Or(b, c)))
+        let geom = Geometry::not(Geometry::and(a, Geometry::or(b, c)));
+
+        match round_trip(&geom) {
+            Geometry::Not(inner) => match *inner {
+                Geometry::And(left, right) => {
+                    match *left {
+                        Geometry::Sphere(s) => assert_relative_eq!(s.radius, 1.0),
+                        _ => panic!("Expected Sphere"),
+                    }
+                    match *right {
+                        Geometry::Or(a, b) => {
+                            match *a {
+                                Geometry::Sphere(s) => assert_relative_eq!(s.radius, 2.0),
+                                _ => panic!("Expected Sphere"),
+                            }
+                            match *b {
+                                Geometry::Sphere(s) => assert_relative_eq!(s.radius, 3.0),
+                                _ => panic!("Expected Sphere"),
+                            }
+                        }
+                        _ => panic!("Expected Or"),
+                    }
+                }
+                _ => panic!("Expected And inside Not"),
+            },
+            _ => panic!("Expected Not after round-trip"),
         }
     }
 }

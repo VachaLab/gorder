@@ -41,12 +41,14 @@ fn get_hint(group: &str) -> String {
         "Membrane" => ("membrane".bright_blue(), "leaflets".bright_blue()),
         "Heads" => ("heads".bright_blue(), "leaflets".bright_blue()),
         "NormalHeads" => ("heads".bright_blue(), "membrane_normal".bright_blue()),
+        "NormalMethyls" => ("methyls".bright_blue(), "membrane_normal".bright_blue()),
         "ClusterHeads" => ("heads".bright_blue(), "leaflets".bright_blue()),
         "Methyls" => ("methyls".bright_blue(), "leaflets".bright_blue()),
-        "GeomReference" => ("reference".bright_blue(), "geometry".bright_blue()),
         "Saturated" => ("saturated".bright_blue(), "analysis_type".bright_blue()),
         "Unsaturated" => ("unsaturated".bright_blue(), "analysis_type".bright_blue()),
         "Ignore" => ("ignore".bright_blue(), "analysis_type".bright_blue()),
+        // matching on part of geometry reference group name
+        s if s.contains("GeomReference") => ("reference".bright_blue(), "geometry".bright_blue()),
         // unknown group name; this should not happen, but it's not important so we will pretend it's okay
         _ => return String::from("a query specifying the group selects no atoms"),
     };
@@ -159,14 +161,28 @@ pub(super) fn prepare_geometry_selection(
         }
     };
 
+    prepare_system_for_geometry(&geom, system)?;
+
+    Ok(geom)
+}
+
+fn prepare_system_for_geometry(
+    geom: &GeometrySelectionType,
+    system: &mut System,
+) -> Result<(), TopologyError> {
     match &geom {
         GeometrySelectionType::None(_) => (),
         GeometrySelectionType::Cuboid(x) => x.prepare_system(system)?,
         GeometrySelectionType::Cylinder(x) => x.prepare_system(system)?,
         GeometrySelectionType::Sphere(x) => x.prepare_system(system)?,
+        GeometrySelectionType::And(x, y) | GeometrySelectionType::Or(x, y) => {
+            prepare_system_for_geometry(x, system)?;
+            prepare_system_for_geometry(y, system)?;
+        }
+        GeometrySelectionType::Not(x) => prepare_system_for_geometry(x, system)?,
     }
 
-    Ok(geom)
+    Ok(())
 }
 
 /// Prepare the system for dynamic membrane normal calculation, if this is needed.
@@ -179,6 +195,11 @@ pub(super) fn prepare_membrane_normal_calculation(
             Ok(())
         } // do nothing
         MembraneNormal::Dynamic(params) => create_group(system, "NormalHeads", params.heads()),
+        MembraneNormal::Individual(params) => {
+            create_group(system, "NormalHeads", params.heads())?;
+            create_group(system, "NormalMethyls", params.methyls())?;
+            Ok(())
+        }
     }
 }
 
@@ -374,6 +395,34 @@ pub(super) fn get_reference_head(
     Ok(*atoms.first().expect(PANIC_MESSAGE))
 }
 
+/// Get indices of atoms representing the methyls (or ends of tails) of the given lipid molecule.
+pub(super) fn get_reference_methyls(
+    molecule: &Group,
+    system: &System,
+    group_to_search: &'static str,
+) -> Result<Vec<usize>, TopologyError> {
+    let mut atoms = Vec::new();
+
+    for index in molecule.get_atoms().iter() {
+        if system
+            .group_isin(group_to_search, index)
+            .expect(PANIC_MESSAGE)
+        {
+            atoms.push(index);
+        }
+    }
+
+    if atoms.is_empty() {
+        return Err(TopologyError::NoMethyl(
+            molecule
+                .get_atoms()
+                .first()
+                .unwrap_or_else(|| panic!("FATAL GORDER ERROR | common::get_reference_methyls | No atoms detected inside a molecule. {}", PANIC_MESSAGE))));
+    }
+
+    Ok(atoms)
+}
+
 /// Returns a new vector by interleaving elements from two slices.
 /// Up to `n` items are taken from `vec1`, followed by up to `m` items from `vec2`,
 /// repeating this pattern until both slices are exhausted.
@@ -401,4 +450,27 @@ pub(super) fn interleave_vectors<T: Clone>(vec1: &[T], vec2: &[T], n: usize, m: 
     }
 
     result
+}
+
+/// Remove unsupported characters from query to allow it to be used as a group name.
+pub fn sanitize_query(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() * 2);
+    for ch in s.chars() {
+        match ch {
+            c if c.is_whitespace() => out.push('_'),
+            '\'' => out.push_str("SQ"),
+            '"' => out.push_str("DQ"),
+            '&' => out.push_str("AN"),
+            '|' => out.push_str("PI"),
+            '!' => out.push_str("EX"),
+            '@' => out.push_str("AT"),
+            '(' => out.push_str("LP"),
+            ')' => out.push_str("RP"),
+            '<' => out.push_str("LT"),
+            '>' => out.push_str("GT"),
+            '=' => out.push_str("EQ"),
+            c => out.push(c),
+        }
+    }
+    out
 }

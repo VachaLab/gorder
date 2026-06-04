@@ -7,8 +7,10 @@ use groan_rs::{
     prelude::{Cylinder, NaiveShape, Rectangular, Shape, SimBox, Sphere, Vector3D},
     system::System,
 };
+use log::info;
 
 use crate::{
+    analysis::common::{macros::group_name, sanitize_query},
     errors::TopologyError,
     input::{
         geometry::{CuboidSelection, CylinderSelection, GeomReference, SphereSelection},
@@ -17,7 +19,7 @@ use crate::{
     PANIC_MESSAGE,
 };
 
-use super::{common::macros::group_name, pbc::PBCHandler};
+use super::pbc::PBCHandler;
 
 /// Enum encompassing all possible geometry selections.
 #[derive(Debug, Clone)]
@@ -26,6 +28,9 @@ pub(crate) enum GeometrySelectionType {
     Cuboid(CuboidAnalysis),
     Cylinder(CylinderAnalysis),
     Sphere(SphereAnalysis),
+    And(Box<GeometrySelectionType>, Box<GeometrySelectionType>),
+    Or(Box<GeometrySelectionType>, Box<GeometrySelectionType>),
+    Not(Box<GeometrySelectionType>),
 }
 
 impl Default for GeometrySelectionType {
@@ -51,6 +56,17 @@ impl GeometrySelectionType {
             Some(Geometry::Sphere(sphere)) => {
                 GeometrySelectionType::Sphere(SphereAnalysis::new(sphere, pbc_handler))
             }
+            Some(Geometry::And(x, y)) => GeometrySelectionType::And(
+                Box::from(GeometrySelectionType::from_geometry(Some(x), pbc_handler)),
+                Box::from(GeometrySelectionType::from_geometry(Some(y), pbc_handler)),
+            ),
+            Some(Geometry::Or(x, y)) => GeometrySelectionType::Or(
+                Box::from(GeometrySelectionType::from_geometry(Some(x), pbc_handler)),
+                Box::from(GeometrySelectionType::from_geometry(Some(y), pbc_handler)),
+            ),
+            Some(Geometry::Not(x)) => GeometrySelectionType::Not(Box::from(
+                GeometrySelectionType::from_geometry(Some(x), pbc_handler),
+            )),
         }
     }
 
@@ -58,63 +74,100 @@ impl GeometrySelectionType {
     pub(super) fn info(&self) {
         match self {
             GeometrySelectionType::None(_) => (),
+            _ => {
+                let mut msg = String::from("Geometry selection:");
+                self.write_info(&mut msg, 1);
+                info!("{}", msg);
+            }
+        }
+    }
+
+    fn write_info(&self, msg: &mut String, depth: usize) {
+        use colored::Colorize;
+        use std::fmt::Write;
+        let indent = "  ".repeat(depth);
+        match self {
+            GeometrySelectionType::None(_) => (),
             GeometrySelectionType::Cuboid(cuboid) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  x-dimension: from {} nm to {} nm
-  y-dimension: from {} nm to {} nm
-  z-dimension: from {} nm to {} nm
-  relative to {}",
-                    if cuboid.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "cuboid",
-                    cuboid.properties.xdim()[0],
-                    cuboid.properties.xdim()[1],
-                    cuboid.properties.ydim()[0],
-                    cuboid.properties.ydim()[1],
-                    cuboid.properties.zdim()[0],
-                    cuboid.properties.zdim()[1],
-                    cuboid.properties.reference(),
-                );
+                let inside = if cuboid.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  x-dimension: from {} nm to {} nm\
+                    \n{indent}  y-dimension: from {} nm to {} nm\
+                    \n{indent}  z-dimension: from {} nm to {} nm\
+                    \n{indent}  relative to {}",
+                    inside.cyan(),
+                    "cuboid".cyan(),
+                    cuboid.properties.xdim()[0].to_string().cyan(),
+                    cuboid.properties.xdim()[1].to_string().cyan(),
+                    cuboid.properties.ydim()[0].to_string().cyan(),
+                    cuboid.properties.ydim()[1].to_string().cyan(),
+                    cuboid.properties.zdim()[0].to_string().cyan(),
+                    cuboid.properties.zdim()[1].to_string().cyan(),
+                    cuboid.properties.reference().to_string().cyan(),
+                )
+                .expect(PANIC_MESSAGE);
             }
             GeometrySelectionType::Cylinder(cylinder) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  radius: {} nm
-  oriented along the {} axis 
-  going from {} nm to {} nm along the {} axis
-  relative to {}",
-                    if cylinder.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "cylinder",
-                    cylinder.properties.radius(),
-                    cylinder.properties.orientation(),
-                    cylinder.properties.span()[0],
-                    cylinder.properties.span()[1],
-                    cylinder.properties.orientation(),
-                    cylinder.properties.reference()
+                let inside = if cylinder.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  radius: {} nm\
+                    \n{indent}  oriented along the {} axis\
+                    \n{indent}  going from {} nm to {} nm along the {} axis\
+                    \n{indent}  relative to {}",
+                    inside.cyan(),
+                    "cylinder".cyan(),
+                    cylinder.properties.radius().to_string().cyan(),
+                    cylinder.properties.orientation().to_string().cyan(),
+                    cylinder.properties.span()[0].to_string().cyan(),
+                    cylinder.properties.span()[1].to_string().cyan(),
+                    cylinder.properties.orientation().to_string().cyan(),
+                    cylinder.properties.reference().to_string().cyan(),
                 )
+                .expect(PANIC_MESSAGE);
             }
             GeometrySelectionType::Sphere(sphere) => {
-                colog_info!(
-                    "Will only consider bonds located {} a {}:
-  radius: {} nm
-  center: {}",
-                    if sphere.properties.invert() {
-                        "outside"
-                    } else {
-                        "inside"
-                    },
-                    "sphere",
-                    sphere.properties.radius(),
-                    sphere.properties.reference()
+                let inside = if sphere.properties.invert() {
+                    "outside"
+                } else {
+                    "inside"
+                };
+                write!(
+                    msg,
+                    "\n{indent}{} a {}:\
+                    \n{indent}  radius: {} nm\
+                    \n{indent}  center: {}",
+                    inside.cyan(),
+                    "sphere".cyan(),
+                    sphere.properties.radius().to_string().cyan(),
+                    sphere.properties.reference().to_string().cyan(),
                 )
+                .expect(PANIC_MESSAGE);
+            }
+            GeometrySelectionType::And(x, y) => {
+                write!(msg, "\n{indent}{} of the following:", "all".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
+                y.write_info(msg, depth + 1);
+            }
+            GeometrySelectionType::Or(x, y) => {
+                write!(msg, "\n{indent}{} of the following:", "any".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
+                y.write_info(msg, depth + 1);
+            }
+            GeometrySelectionType::Not(x) => {
+                write!(msg, "\n{indent}{}:", "not".cyan()).expect(PANIC_MESSAGE);
+                x.write_info(msg, depth + 1);
             }
         }
     }
@@ -131,6 +184,13 @@ impl GeometrySelectionType {
             GeometrySelectionType::Cuboid(x) => x.init_reference(system, pbc_handler),
             GeometrySelectionType::Cylinder(x) => x.init_reference(system, pbc_handler),
             GeometrySelectionType::Sphere(x) => x.init_reference(system, pbc_handler),
+            GeometrySelectionType::And(x, y) | GeometrySelectionType::Or(x, y) => {
+                x.init_new_frame(system, pbc_handler);
+                y.init_new_frame(system, pbc_handler);
+            }
+            GeometrySelectionType::Not(x) => {
+                x.init_new_frame(system, pbc_handler);
+            }
         }
     }
 }
@@ -171,7 +231,14 @@ pub(crate) trait GeometrySelection: Send + Sync {
             GeomReference::Point(_) | GeomReference::Center => Ok(()), // nothing to do
             GeomReference::Selection(query) => {
                 // construct a group for geometry reference
-                super::common::create_group(system, "GeomReference", query)
+                super::common::create_group(
+                    system,
+                    // we need to use the query as part of the group name because
+                    // there may be multiple geometry references
+                    // we need to remove unsupported characters from the query
+                    &format!("GeomReference-{}", sanitize_query(query)),
+                    query,
+                )
             }
         }
     }
@@ -192,10 +259,10 @@ pub(crate) trait GeometrySelection: Send + Sync {
     fn init_reference<'a>(&mut self, system: &System, pbc_handler: &impl PBCHandler<'a>) {
         let reference_point = match self.reference() {
             GeomReference::Point(_) => return, // nothing to do, reference position is fixed
-            GeomReference::Selection(_) => {
+            GeomReference::Selection(query) => {
                 // calculate the center of geometry
                 pbc_handler
-                    .group_get_center(system, group_name!("GeomReference"))
+                    .group_get_center(system, &format!("{}-{}", group_name!("GeomReference"), sanitize_query(query)))
                     .unwrap_or_else(|_| panic!("FATAL GORDER ERROR | GeometrySelection::init_reference | Group specifying geometry reference should exist. {}", PANIC_MESSAGE))
             }
             GeomReference::Center => {
@@ -519,7 +586,7 @@ mod tests_cuboid {
     use approx::assert_relative_eq;
     use rand::prelude::*;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -709,7 +776,11 @@ mod tests_cuboid {
         geometry.init_reference(&system, &pbc);
 
         let mut membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         membrane_center.x -= 1.0;
         membrane_center.y += 1.5;
@@ -753,7 +824,7 @@ mod tests_cylinder {
     use approx::assert_relative_eq;
     use groan_rs::prelude::Dimension;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -869,7 +940,11 @@ mod tests_cylinder {
         geometry.init_reference(&system, &pbc);
 
         let mut membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         membrane_center.z += 1.5;
         membrane_center.wrap(system.get_box().unwrap());
@@ -911,7 +986,7 @@ mod tests_cylinder {
 mod tests_sphere {
     use approx::assert_relative_eq;
 
-    use crate::analysis::pbc::PBC3D;
+    use crate::analysis::{common::macros::group_name, pbc::PBC3D};
 
     use super::*;
 
@@ -1010,7 +1085,11 @@ mod tests_sphere {
         geometry.init_reference(&system, &pbc);
 
         let membrane_center = system
-            .group_get_center(group_name!("GeomReference"))
+            .group_get_center(&format!(
+                "{}-{}",
+                group_name!("GeomReference"),
+                sanitize_query("@membrane")
+            ))
             .unwrap();
         let shape = geometry.shape();
         let point = shape.get_position();

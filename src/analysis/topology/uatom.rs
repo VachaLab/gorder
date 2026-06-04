@@ -8,7 +8,7 @@ use std::ops::Add;
 use super::OrderCalculable;
 use crate::{
     analysis::{
-        geometry::GeometrySelection, leaflets::MoleculeLeafletClassification,
+        geometry::GeometrySelectionType, leaflets::MoleculeLeafletClassification,
         normal::MoleculeMembraneNormal, pbc::PBCHandler, uaorder::UAOrderAtomType,
     },
     errors::{AnalysisError, TopologyError},
@@ -70,12 +70,12 @@ impl OrderCalculable for UAOrderAtoms {
     }
 
     #[inline(always)]
-    fn analyze_frame<'a, Geom: GeometrySelection>(
+    fn analyze_frame<'a>(
         &mut self,
         frame: &'a System,
         pbc_handler: &'a impl PBCHandler<'a>,
         frame_index: usize,
-        geometry: &Geom,
+        geometry: &GeometrySelectionType,
         leaflet: &mut Option<MoleculeLeafletClassification>,
         normal: &mut MoleculeMembraneNormal,
     ) -> Result<(), AnalysisError> {
